@@ -1,9 +1,12 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {Op} from "sequelize";
-import { User } from "../models/index.js";
+import { sequelize, User } from "../models/index.js";
 
 const generateToken = (user) => {
+    if(!process.env.JWT_SECRET){
+        throw new Error("JWT_SECRET is Missing");
+    }
     return jwt.sign(
         {
             id: user.id,
@@ -17,6 +20,7 @@ const generateToken = (user) => {
     );
 }
 export async function register(req,res){
+    let transaction;
     try{
         const { username, email, password } = req.body;
         if (!username || !email || !password){
@@ -42,12 +46,14 @@ export async function register(req,res){
         }
         //encrypt passwordd bos yg
         const password_hash = await bcrypt.hash(password,10);
+        transaction = await sequelize.transaction();
         const user = await User.create({
             username,
             email,
             password_hash,
         });
         const token = generateToken(user);
+        await transaction.commit();
         return res.status(201).json({
             message: "Success Register",
             token,
