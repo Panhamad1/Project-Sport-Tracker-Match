@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { loginUser } from '../services/authService.js';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../layouts/Login&SignupLayout';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    identifier: "",
+    password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -17,9 +19,25 @@ const LoginPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login attempt with:', formData);
+    try{
+      const data = await loginUser(formData.identifier, formData.password);
+      console.log("Login response: ", data);
+
+      if(data.token){
+        alert("Login success");
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate("/dashboard");
+      }else{
+        alert("login failed:" + data.message);
+      }
+    }catch(error){
+      console.error(error);
+      alert("Something went wrong");
+    }
+
   };
 
   return (
@@ -30,7 +48,6 @@ const LoginPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center">
             
             <div className="space-y-4 sm:space-y-6 order-1">
-              {/* Badge */}
               <div className="inline-flex items-center gap-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-full px-3 sm:px-4 py-1 text-xs sm:text-sm text-[#8b5cf6]">
                 <span className="w-1.5 h-1.5 bg-[#8b5cf6] rounded-full animate-pulse"></span>
                 Welcome Back!
@@ -87,10 +104,10 @@ const LoginPage = () => {
                       Username or Email Address
                     </label>
                     <input
-                      type="email"
-                      name="email"
+                      type="text"
+                      name="identifier"
                       placeholder="Enter your Username or Email Address"
-                      value={formData.email}
+                      value={formData.identifier}
                       onChange={handleChange}
                       className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 sm:py-3 text-white text-sm sm:text-base placeholder-gray-500 focus:outline-none focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] transition-all duration-200"
                       required

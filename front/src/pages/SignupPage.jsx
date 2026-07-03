@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { registerUser } from '../services/authService.js';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../layouts/Login&SignupLayout';
 
 const SignupPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -20,20 +22,30 @@ const SignupPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match! Please try again.");
+      alert("Passwords do not match");
       return;
     }
-    
-    if (!agreeTerms) {
-      alert("Please agree to the Terms of Service.");
-      return;
+
+    try{
+      const data = await registerUser(formData.username, formData.email, formData.password);
+      console.log("Register response: ", data);
+
+      if(data.token){
+        alert("Register success");
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        navigate("/dashboard");
+      }else{
+        alert("Register failed:" + data.message);
+      }
+    }catch(error){
+      console.error(error);
+      alert("Something went wrong");
     }
-    
-    console.log('Signup attempt with:', formData);
   };
 
   return (
