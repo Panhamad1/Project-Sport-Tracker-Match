@@ -44,10 +44,31 @@ const getDaysCount = (from, to) => {
 
     return diffDays + 1;
 };
+//kleng dak league alov dak tah world cup sen teh
+const allowLeagueIds = [1];
+const isLeagueAllowed = (apiLeagueId)=>{
+    //ber allowleague like have nothing like this [] it mean we save every league 
+    if(allowLeagueIds.length === 0){
+        return true;
+    }
+    return allowLeagueIds.includes(Number(apiLeagueId));
+}
 
 const findFixturesFromDatabase = async (date) => {
     const { startDate, endDate } = getDateRange(date);
 
+    const leagueInclude = {
+        model: League,
+        as: "league",
+    };
+    if(allowLeagueIds.length > 0){
+        leagueInclude.where = {
+            api_league_id:{
+                [Op.in]: allowLeagueIds,
+            },
+        };
+        leagueInclude.required = true;
+    };
     const fixtures = await Fixture.findAll({
       where: {
         match_date: {
@@ -55,10 +76,7 @@ const findFixturesFromDatabase = async (date) => {
             },
         },
         include: [
-            {
-                model: League,
-                as: "league",
-            },
+            leagueInclude,
             {
                 model: Team,
                 as: "homeTeam",
@@ -229,7 +247,6 @@ const isEmptySuccessLogFresh = (syncLog) => {
 
     return diffHours < emptyCacheHours;
 };
-
 const fetchAndSaveFixturesFromApi = async (date) => {
     const timezone = process.env.API_FOOTBALL_TIMEZONE || "Asia/Phnom_Penh";
 
@@ -237,8 +254,9 @@ const fetchAndSaveFixturesFromApi = async (date) => {
         date,
         timezone,
     });
-
-    const fixtures = apiData.response || [];
+    const apiFixtures = apiData.response || [];
+    const fixtures = apiFixtures.filter((fixture) => isLeagueAllowed(fixture.league?.id));
+    console.log(`API fixtures: ${apiFixtures.length}, saved after filter: ${fixtures.length}`);
 
     for (const fixture of fixtures) {
         await saveOrUpdateFixture(fixture);

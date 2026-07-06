@@ -3,10 +3,12 @@ import cors from "cors";
 import { sequelize } from "./models/index.js";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
+import fixtureRoutes from "./routes/fixtureRoutes.js";
+import favoriteTeamRoutes from "./routes/favoriteTeamRoutes.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
@@ -17,12 +19,15 @@ app.get('/',(req,res) =>{
     });
 });
 app.use("/api/auth",authRoutes);
+app.use("/api/football/fixtures",fixtureRoutes);
+app.use("/api/favorites/teams", favoriteTeamRoutes);
+
 
 // start server
 try{
     await sequelize.authenticate();
     console.log("Database Connect Success");
-    await sequelize.sync({alter:true});
+    await sequelize.sync();
     console.log("Database Sync Success");
     app.listen(PORT, ()=>{
         console.log(`Server running on http://localhost:${PORT}`)

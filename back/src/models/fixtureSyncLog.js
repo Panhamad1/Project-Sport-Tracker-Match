@@ -11,7 +11,7 @@ const FixtureSyncLog = sequelize.define("fixtureSyncLog",
         status: {
             type: DataTypes.ENUM("success","failed"),
             allowNull: false,
-            defaultValue: "sucess",
+            defaultValue: "success",
         },
         fixture_count: {
             type: DataTypes.INTEGER,
@@ -21,7 +21,7 @@ const FixtureSyncLog = sequelize.define("fixtureSyncLog",
         error_message: {
             type: DataTypes.TEXT,
         },
-        last_syncd_at: {
+        last_synced_at: {
             type: DataTypes.DATE,
             allowNull: false,
             defaultValue: DataTypes.NOW,

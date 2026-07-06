@@ -1,4 +1,4 @@
-import { getFixturesByDateCached,syncFixturesByDateRange } from "../services/footballCacheService.js";
+import { getFixturesByDateCached,syncFixturesByDateRange } from "../services/fixtureCacheService.js";
 // ah nis somrab fetch fixture tam date jg frontend trov bos date oy backend format: YYYY-MM-DD
 const getFixturesByDate = async (req,res) => {
     try{
@@ -69,3 +69,5 @@ const syncFixtures = async(req,res) =>{
         });
     }
 };
+
+export { getFixturesByDate, syncFixtures};

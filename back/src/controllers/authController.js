@@ -18,6 +18,10 @@ const generateToken = (user) => {
 }
 export async function register(req,res){
     try{
+        if(!process.env.JWT_SECRET){
+            console.log("JWT_SECRET is missing in .env");
+            return res.status(500).json({message: "Unavailable To Register For Now"});
+        }
         const { username, email, password } = req.body;
         if (!username || !email || !password){
             return res.status(400).json({
@@ -68,6 +72,12 @@ export async function register(req,res){
 }
 export async function login(req,res){
     try{
+        if (!process.env.JWT_SECRET) {
+            console.log("JWT_SECRET is missing in .env");
+            return res.status(500).json({
+                message: "Login service unavailable for now",
+            });
+        }
         const { identifier, password } = req.body;
         if(!identifier || !password){
             return res.status(400).json({

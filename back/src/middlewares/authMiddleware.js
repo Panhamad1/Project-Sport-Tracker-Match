@@ -6,7 +6,7 @@ export async function protect(req,res,next){
         const authHeader = req.headers.authorization;
         if(!authHeader || !authHeader.startsWith("Bearer ")){
             return res.status(401).json({
-                message: "token not provided",
+                message: "Please Login First",
             });
         }
         const token = authHeader.split(" ")[1];
