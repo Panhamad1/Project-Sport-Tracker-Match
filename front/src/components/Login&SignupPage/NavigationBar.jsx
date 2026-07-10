@@ -3,7 +3,7 @@ import { FaFutbol, FaHome, FaTv, FaTrophy, FaUsers, FaChartBar } from 'react-ico
 
 const NavigationBar = () => {
   const navLinks = [
-    { path: '/', label: 'Home', icon: <FaHome /> },
+    { path: '/home', label: 'Home', icon: <FaHome /> },
     { path: '/live', label: 'Live Scores', icon: <FaTv /> },
     { path: '/results', label: 'Results', icon: <FaTrophy /> },
     { path: '/teams', label: 'Teams', icon: <FaUsers /> },

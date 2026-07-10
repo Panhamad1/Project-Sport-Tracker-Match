@@ -38,7 +38,7 @@ const SignupPage = () => {
         alert("Register success");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/dashboard");
+        navigate("/home");
       }else{
         alert("Register failed:" + data.message);
       }
