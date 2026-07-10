@@ -6,7 +6,6 @@ const FavoriteTeam = sequelize.define("FavoriteTeam",
         user_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
-            unique: true,
         },
         team_id: {
             type: DataTypes.INTEGER,

@@ -1,4 +1,4 @@
-import jwt, { decode } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { User } from "../models/index.js";
 
 export async function protect(req,res,next){
@@ -8,7 +8,7 @@ export async function protect(req,res,next){
             return res.status(401).json({
                 message: "Please Login First",
             });
-        }
+        } 
         const token = authHeader.split(" ")[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await User.findByPk(decoded.id, {
@@ -18,14 +18,14 @@ export async function protect(req,res,next){
         });
         if(!user){
             return res.status(401).json({
-                message: "user not found",
+                message: "Unauthorized. user not found",
             });
         }
         req.user = user;
         next();
     } catch(error){
         return res.status(401).json({
-              message: "Invalid or expired token",
+              message: "Unauthorized. Invalid or expired token",
               error: error.message,
         });
     }

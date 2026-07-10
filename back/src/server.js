@@ -5,6 +5,10 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import fixtureRoutes from "./routes/fixtureRoutes.js";
 import favoriteTeamRoutes from "./routes/favoriteTeamRoutes.js";
+import searchRoutes from "./routes/searchRoutes.js";
+import adminSyncRoutes from "./routes/adminSyncRoutes.js";
+import matchRoutes from "./routes/matchRoutes.js";
+import leagueRoutes from "./routes/leagueRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -20,7 +24,11 @@ app.get('/',(req,res) =>{
 });
 app.use("/api/auth",authRoutes);
 app.use("/api/football/fixtures",fixtureRoutes);
+app.use("/api/football/matches",matchRoutes);
+app.use("/api/football/leagues",leagueRoutes);
 app.use("/api/favorites/teams", favoriteTeamRoutes);
+app.use("/api/football/search",searchRoutes);
+app.use("/api/admin/sync",adminSyncRoutes);
 
 
 // start server

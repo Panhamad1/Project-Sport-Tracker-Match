@@ -50,6 +50,7 @@ export async function register(req,res){
             username,
             email,
             password_hash,
+            role: "user",
         });
         const token = generateToken(user);
         return res.status(201).json({

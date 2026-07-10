@@ -62,3 +62,8 @@ idea: lbeab req API doysa req ban tic
     live match: refresh after 30 seconds or 1 minute
     standings: refresh after 1 day
     news: refresh after 1 day
+
+idea for admin role: 
+    admin role prer somrab sync data
+    manage stream link 
+    manage top match of the day

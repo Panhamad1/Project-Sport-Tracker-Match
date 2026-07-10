@@ -6,26 +6,19 @@ import {
   FixtureSyncLog,
 } from "../models/index.js";
 import { apiFootballGet } from "../providers/apiFootballProvider.js";
+import {
+    CAMBODIA_TIMEZONE,
+    getCambodiaDateRange,
+    getCambodiaDateTimeFields,
+} from "../utils/cambodiaTime.js";
 
-// This prevents many users requesting the same empty date at the same time
-// and causing many API calls.
-// 1. Users keep requesting dates with no matches
-// 2. Many users request same date at same time
-// 3. API failed but backend keeps retrying again and again
-const runningDateSyncs = new Map();
+// this will use admin for sync data and normal user only make request to database
 const sleep = (seconds) => {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 };
 
 const isValidDate = (date) => {
     return /^\d{4}-\d{2}-\d{2}$/.test(date);
-};
-
-const getDateRange = (date) => {
-    const startDate = new Date(`${date}T00:00:00.000Z`);
-    const endDate = new Date(`${date}T23:59:59.999Z`);
-
-    return { startDate, endDate };
 };
 
 const getNextDate = (date) => {
@@ -45,7 +38,7 @@ const getDaysCount = (from, to) => {
     return diffDays + 1;
 };
 //kleng dak league alov dak tah world cup sen teh
-const allowLeagueIds = [1];
+const allowLeagueIds = [1,2];
 const isLeagueAllowed = (apiLeagueId)=>{
     //ber allowleague like have nothing like this [] it mean we save every league 
     if(allowLeagueIds.length === 0){
@@ -55,7 +48,7 @@ const isLeagueAllowed = (apiLeagueId)=>{
 }
 
 const findFixturesFromDatabase = async (date) => {
-    const { startDate, endDate } = getDateRange(date);
+    const { startDate, endDate } = getCambodiaDateRange(date);
 
     const leagueInclude = {
         model: League,
@@ -92,28 +85,33 @@ const findFixturesFromDatabase = async (date) => {
     return fixtures;
 };
 
-const findFixtureSyncLog = async (date) => {
-    const syncLog = await FixtureSyncLog.findOne({
-      where: {
-        sync_date: date,
-      },
-    });
+const formatFixtureForResponse = (fixture) => {
+    const fixtureData = fixture.toJSON();
 
-    return syncLog;
+    return {
+        ...fixtureData,
+        ...getCambodiaDateTimeFields(fixtureData.match_date),
+    };
 };
 
-const isFailedLogFresh = (syncLog) => {
-    if (!syncLog || syncLog.status !== "failed") return false;
+const getFixturesByDateFromDatabaseOnly = async (date) => {
+    if(!isValidDate(date)){
+        throw new Error("Invalid Date format. Use YYYY-MM-DD");
+    }   
+    const fixtures = await findFixturesFromDatabase(date);
+    const formattedFixtures = fixtures.map(formatFixtureForResponse);
 
-    const retryMinutes = Number(process.env.FAILED_SYNC_RETRY_MINUTES) || 60;
-
-    const lastSyncedTime = new Date(syncLog.last_synced_at).getTime();
-    const now = Date.now();
-
-    const diffMinutes = (now - lastSyncedTime) / 1000 / 60;
-
-    return diffMinutes < retryMinutes;
+    return {
+        status: "success",
+        source: "database_only",
+        timezone: CAMBODIA_TIMEZONE,
+        message: formattedFixtures.length === 0 ? "No fixtures found in database for this date" : "Fixtures Loaded Success from database",
+        count: formattedFixtures.length,
+        fixtures: formattedFixtures,
+        apiRequestUsed: false,
+    }
 };
+
 
 const saveOrUpdateSyncLog = async ({date,status,fixtureCount = 0,errorMessage = null,}) => {
     const values = {
@@ -181,13 +179,18 @@ const saveOrUpdateTeam = async (apiTeam) => {
 
     const [team, created] = await Team.findOrCreate({
         where: {
-          api_team_id: apiTeam.id,
+            api_team_id: apiTeam.id,
         },
         defaults: values,
     });
 
     if (!created) {
-        await team.update(values);
+        await team.update({
+            name: apiTeam.name || team.name,
+            logo: apiTeam.logo || team.logo,
+            raw_data: apiTeam,
+            last_updated: new Date(),
+        });
     }
 
     return team;
@@ -233,20 +236,6 @@ const saveOrUpdateFixture = async (apiFixtureData) => {
 
     return fixture;
 };
-const isEmptySuccessLogFresh = (syncLog) => {
-    if (!syncLog) return false;
-    if (syncLog.status !== "success") return false;
-    if (syncLog.fixture_count !== 0) return false;
-
-    const emptyCacheHours = Number(process.env.EMPTY_FIXTURE_CACHE_HOURS) || 12;
-
-    const lastSyncedTime = new Date(syncLog.last_synced_at).getTime();
-    const now = Date.now();
-
-    const diffHours = (now - lastSyncedTime) / 1000 / 60 / 60;
-
-    return diffHours < emptyCacheHours;
-};
 const fetchAndSaveFixturesFromApi = async (date) => {
     const timezone = process.env.API_FOOTBALL_TIMEZONE || "Asia/Phnom_Penh";
 
@@ -271,100 +260,6 @@ const fetchAndSaveFixturesFromApi = async (date) => {
 
     return fixtures.length;
 };
-
-const getFixturesByDateCachedInternal = async (date) => {
-    const databaseFixtures = await findFixturesFromDatabase(date);
-
-    if (databaseFixtures.length > 0) {
-        return {
-            status: "success",
-            source: "database_cache",
-            message: "Fixtures loaded from database",
-            count: databaseFixtures.length,
-            fixtures: databaseFixtures,
-            apiRequestUsed: false,
-        };
-    }
-
-    const syncLog = await findFixtureSyncLog(date);
-
-    if (isEmptySuccessLogFresh(syncLog)) {
-        return {
-            status: "success",
-            source: "database_empty_cache",
-            message: "No fixtures found for this date",
-            count: 0,
-            fixtures: [],
-            apiRequestUsed: false,
-        };
-    }
-
-    if (syncLog?.status === "failed" && isFailedLogFresh(syncLog)) {
-        return {
-            status: "failed",
-            source: "database_failed_cache",
-            message: "Fixture sync recently failed. Try again later.",
-            count: 0,
-            fixtures: [],
-            error_message: syncLog.error_message,
-            apiRequestUsed: false,
-        };
-    }
-
-    try {
-        await fetchAndSaveFixturesFromApi(date);
-
-        const updatedFixtures = await findFixturesFromDatabase(date);
-
-        return {
-            status: "success",
-            source: "api_football_then_database",
-            message:
-              updatedFixtures.length === 0
-                ? "No fixtures found for this date"
-                : "Fixtures loaded from API and saved to database",
-            count: updatedFixtures.length,
-            fixtures: updatedFixtures,
-            apiRequestUsed: true,
-        };
-    } catch (error) {
-        await saveOrUpdateSyncLog({
-            date,
-            status: "failed",
-            fixtureCount: 0,
-            errorMessage: error.message,
-        });
-
-        return {
-            status: "failed",
-            source: "api_football_failed",
-            message: "Failed to fetch fixtures from API-FOOTBALL",
-            count: 0,
-            fixtures: [],
-            error_message: error.message,
-            apiRequestUsed: true,
-        };
-    }
-};
-
-const getFixturesByDateCached = async (date) => {
-    if (!isValidDate(date)) {
-        throw new Error("Invalid date format. Use YYYY-MM-DD");
-    }
-
-    if (runningDateSyncs.has(date)) {
-        return runningDateSyncs.get(date);
-    }
-
-    const syncPromise = getFixturesByDateCachedInternal(date).finally(() => {
-        runningDateSyncs.delete(date);
-    });
-
-    runningDateSyncs.set(date, syncPromise);
-
-    return syncPromise;
-};
-
 const syncFixturesByDateRange = async (from, to) => {
     if (!isValidDate(from) || !isValidDate(to)) {
         throw new Error("Invalid date format. Use YYYY-MM-DD");
@@ -385,32 +280,42 @@ const syncFixturesByDateRange = async (from, to) => {
     let currentDate = from;
 
     while (currentDate <= to) {
-        const result = await getFixturesByDateCached(currentDate);
-
-        results.push({
-            date: currentDate,
-            status: result.status,
-            source: result.source,
-            count: result.count,
-            message:
-            result.count === 0 && result.status === "success" ? "No fixtures found for this date" : result.message, error_message: result.error_message || null,
-      });
-
-        if (result.status === "failed" && result.apiRequestUsed) {
+        try{
+            const savedCount = await fetchAndSaveFixturesFromApi(currentDate);
+            results.push({
+                date: currentDate,
+                status: "success",
+                source: "api_football_admin_sync",
+                count: savedCount,
+                message: savedCount === 0 ? "No fixtures found for this date" : "fixtures sync from api and save to database",
+                error_message: null,
+            });
+        }catch(error){
+            await saveOrUpdateSyncLog({
+                date: currentDate,
+                status: "failed",
+                fixtureCount: 0,
+                errorMessage: error.message,
+            });
+            results.push({
+                date: currentDate,
+                status: "failed",
+                source: "api_football_admin_sync_failed",
+                count: 0,
+                message: "Failed to sync fixtures from API-FOOTBALL",
+                error_message: error.message,
+            });
             break;
         }
-
         currentDate = getNextDate(currentDate);
-
-        if (currentDate <= to && result.apiRequestUsed) {
-            await sleep(7);
+        if(currentDate <= to){
+            await sleep(1);
         }
     }
-
     return results;
 };
 
 export {
-    getFixturesByDateCached,
+    getFixturesByDateFromDatabaseOnly,
     syncFixturesByDateRange,
 };
