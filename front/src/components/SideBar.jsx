@@ -1,15 +1,18 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaArrowRight,
+  FaChartLine,
   FaCog,
+  FaCrown,
   FaHome,
+  FaNewspaper,
   FaQuestionCircle,
   FaShieldAlt,
   FaSignInAlt,
   FaSignOutAlt,
   FaTrophy,
   FaTv,
-  FaUser,
+  FaUserCircle,
 } from 'react-icons/fa';
 import { useAuth } from '../hooks/useAuth';
 
@@ -23,19 +26,28 @@ const SideBar = ({ isExpanded }) => {
 
   const sidebarLinks = [
     { path: '/home', label: 'Home', icon: <FaHome /> },
+    { path: '/leagues', label: 'Leagues', icon: <FaCrown /> },
     { path: '/matches', label: 'Matches', icon: <FaTv /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
+    { path: '/prediction', label: 'Predictions', icon: <FaChartLine /> },
+    { path: '/news', label: 'News', icon: <FaNewspaper /> },
   ];
 
   const accountLinks = isAuthenticated
-    ? [{ path: '/profile', label: 'Profile', icon: <FaUser /> }]
+    ? [{ path: '/profile', label: 'Profile', icon: <FaUserCircle /> }]
     : [];
 
   const adminLinks = isAdmin
     ? [{ path: '/admin', label: 'Admin Panel', icon: <FaShieldAlt /> }]
     : [];
 
-  const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const isActive = (path) => {
+    if(path === '/profile'){
+      return location.pathname === path;
+    }
+
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
 
   const handleLogout = () => {
     logout();

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -865,8 +865,11 @@ const StreamsTab = ({ apiFixtureId, isAdmin, onActiveStreamsChange, streams }) =
 
 const MatchDetailPage = () => {
   const { matchId: apiFixtureId } = useParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const initialTab = searchParams.get("tab") || "overview";
+  const validTab = tabs.some((t) => t.key === initialTab) ? initialTab : "overview";
+  const [activeTab, setActiveTab] = useState(validTab);
   const [match, setMatch] = useState(null);
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -127,9 +127,10 @@ const PredictionCard = ({ prediction, type }) => {
   const isSettled = type === "settled";
   const settledStatus = isSettled ? getSettledStatus(prediction) : null;
   const pointsValue = Number(prediction.points_awarded || 0);
+  const matchLink = matchId ? `/matches/${matchId}?tab=prediction` : null;
 
-  return (
-    <article className="rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] p-4">
+  const cardContent = (
+    <article className={`rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] p-4 ${matchLink ? "cursor-pointer transition-all hover:border-[#8b5cf6]/40 hover:bg-[#0d0d0d]/80" : ""}`}>
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#2a2a2a] pb-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-white">{getMatchTitle(match)}</p>
@@ -176,18 +177,25 @@ const PredictionCard = ({ prediction, type }) => {
         </div>
       </div>
 
-      {matchId && (
-        <div className="mt-4 flex justify-end">
-          <Link
-            to={`/matches/${matchId}`}
-            className="text-sm font-medium text-[#a78bfa] transition-colors hover:text-white"
-          >
-            View match
-          </Link>
+      {matchLink && (
+        <div className="mt-4 flex items-center justify-end gap-1">
+          <span className="text-sm font-medium text-[#a78bfa] transition-colors group-hover:text-white">
+            View prediction
+          </span>
         </div>
       )}
     </article>
   );
+
+  if (matchLink) {
+    return (
+      <Link to={matchLink} className="group block no-underline">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return cardContent;
 };
 
 const PredictionSection = ({ title, count, children }) => {
@@ -202,7 +210,7 @@ const PredictionSection = ({ title, count, children }) => {
   );
 };
 
-const ProfilePredictionHistory = ({ user, authLoading }) => {
+const ProfilePredictionHistory = ({ user, authLoading, framed = false }) => {
   const [predictions, setPredictions] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -281,7 +289,7 @@ const ProfilePredictionHistory = ({ user, authLoading }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${framed ? "rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] p-6" : ""}`}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold">Prediction History</h2>
