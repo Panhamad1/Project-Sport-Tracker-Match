@@ -255,7 +255,7 @@ Example:
 1. Backend reads users ordered by points.
 2. Admin users are excluded.
 3. Points are decimal values because prediction points come from odds.
-4. Public leaderboard returns rank, username, and points.
+4. Public leaderboard returns rank, username, points, prediction count, settled count, correct count, wrong count, pending count, and win rate.
 
 ## Main Backend Routes
 

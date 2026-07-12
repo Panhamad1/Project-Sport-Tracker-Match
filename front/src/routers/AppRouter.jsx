@@ -8,6 +8,7 @@ import ProfilePage from '../pages/ProfilePage';
 import AdminPanelPage from '../pages/AdminPanelPage';
 import MatchesPage from '../pages/MatchesPage';
 import MatchDetailPage from '../pages/MatchDetailPage';
+import LeaderboardPage from '../pages/LeaderboardPage';
 
 function AppRouter() {
   return (
@@ -25,6 +26,7 @@ function AppRouter() {
                 <Route path="/profile/settings" element={<ProfilePage />} />
                 <Route path="/matches" element={<MatchesPage />} />
                 <Route path="/matches/:matchId" element={<MatchDetailPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/admin" element={<AdminPanelPage />} />
             </Route>
         </Routes>

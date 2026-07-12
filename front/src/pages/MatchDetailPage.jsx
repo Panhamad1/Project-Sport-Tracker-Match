@@ -290,7 +290,7 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
 
   const handlePick = async (odd) => {
     if(options?.is_locked){
-      setMessage("Prediction is locked because the match already started.");
+      setMessage("Prediction is locked because kickoff time has passed.");
       return;
     }
 
@@ -398,7 +398,7 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
         {options?.is_locked && (
           <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-yellow-500/10 px-3 py-1 text-xs text-yellow-200">
             <FaLock />
-            Prediction locked because the match already started.
+            Prediction locked because kickoff time has passed.
           </p>
         )}
 

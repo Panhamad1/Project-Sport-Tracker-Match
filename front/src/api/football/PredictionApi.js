@@ -39,6 +39,10 @@ export const getPredictionOptions = ({ apiFixtureId }) => {
   return requestPrediction(() => API.get(`/matches/${apiFixtureId}/options`));
 };
 
+export const getMyPredictions = () => {
+  return requestPrediction(() => API.get("/me"));
+};
+
 export const savePredictionPick = ({ apiFixtureId, fixtureOddId }) => {
   return requestPrediction(() => API.post(`/matches/${apiFixtureId}/picks`, {
     fixture_odd_id: fixtureOddId,

@@ -13,6 +13,7 @@ import { getCambodiaDateTimeFields } from "../utils/cambodiaTime.js";
 
 const finishedStatusShortCodes = ["FT", "AET", "PEN"];
 const allowedOverUnderLines = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5];
+const predictionLockedMessage = "Prediction is locked because kickoff time has passed";
 
 const fixtureInclude = [
     {
@@ -573,7 +574,7 @@ const savePredictionPickService = async (userId, apiFixtureId, fixtureOddId) => 
     if (isPredictionLocked(fixture)) {
         return {
             status: "locked",
-            message: "Prediction is locked because the match already started",
+            message: predictionLockedMessage,
             match: formatPublicFixture(fixture),
         };
     }
@@ -683,7 +684,7 @@ const deletePredictionPickService = async (userId, predictionPickId) => {
     if (isPredictionLocked(predictionPick.fixture)) {
         return {
             status: "locked",
-            message: "Prediction is locked because the match already started",
+            message: predictionLockedMessage,
         };
     }
 
@@ -715,7 +716,7 @@ const deletePredictionService = async (userId, apiFixtureId) => {
     if (isPredictionLocked(fixture)) {
         return {
             status: "locked",
-            message: "Prediction is locked because the match already started",
+            message: predictionLockedMessage,
         };
     }
 

@@ -1,4 +1,4 @@
-const ProfilePlaceholderCard = ({ icon, title, description = "Empty state ready for future UI." }) => {
+const ProfilePlaceholderCard = ({ icon, title, description = "No saved activity in this section yet." }) => {
   return (
     <div className="border border-[#2a2a2a] rounded-lg p-4 bg-[#111111]">
       <div className="flex items-center gap-3 text-gray-200">
