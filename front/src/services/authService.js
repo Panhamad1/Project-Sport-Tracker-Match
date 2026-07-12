@@ -22,7 +22,13 @@ export async function registerUser(username, email, password){
 
 
 export async function fetchCurrentUser(){
-    return await getMe();
+    const data = await getMe();
+
+    if(data.user){
+        return data.user;
+    }
+
+    return data;
 };
 
 

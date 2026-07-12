@@ -1,69 +1,55 @@
-1. Create backend project
-2. Install packages
-3. Setup .env
-4. Setup database connection
-5. Setup Express app/server
-6. Create User model
-7. Create auth register/login
-8. Create auth middleware
-9. Create all remaining models
-10. Add model associations
-11. Build favorite team routes
-12. Build pinned match routes
-13. Build view history routes
-14. Build dream team routes
-15. Build prediction routes
-16. Build leaderboard route
-17. Build football mock provider
-18. Build API-FOOTBALL provider
-19. Add generate mock script
-20. Test everything with Postman
+# Football Score
 
-1. Lbos del yk pi API
-Live Match
-Schedule Match
-Match Result
-Team Profile
-Player Profile
-Standing Table
-Lineup
-Match Statistics
-H2H
-Events
-Player Stats
-Search Team/Player/Match
-Prediction checking result
-2. lbos del trov save knong database
-Users
-Favorite Teams
-Pinned Matches
-Recent View History
-Dream Team
-User Predictions
-Points
-Leaderboard
+Football Score is a full-stack football score website. The system stores football data in MySQL first, then the frontend reads from the backend database. API-FOOTBALL is used only through admin sync routes because the free API plan has request and season limits.
 
+## Main Features
 
-*Unique Feature
-- Favorite Teams Dashboard
-- Pinned Matches
-- Recent View History
-- Dream Team Builder
-- Match Prediction System
-- Global Leaderboard
-- Player Comparison
-- Guest Notifications
-- Prediction Point Rules
+- User register, login, and JWT authentication
+- Admin-only data sync from API-FOOTBALL
+- Fixtures by Cambodia date
+- Match score and status
+- Match detail with overview, H2H, prediction data, lineups, statistics, goal scorers, and streams
+- League standings
+- Search teams, leagues, players, and matches
+- Favorite teams
+- Pinned matches
+- Admin stream-link management
+- Global top match selected by admin
+- User score predictions before kickoff
+- Prediction point awarding by admin
+- Public leaderboard
 
+## Tech Stack
 
-idea: lbeab req API doysa req ban tic
-    teams: refresh after 7 days
-    fixtures: refresh after 1 day
-    live match: refresh after 30 seconds or 1 minute
-    standings: refresh after 1 day
-    news: refresh after 1 day
+- Frontend: React, Vite, Tailwind CSS, React Router, Axios
+- Backend: Node.js, Express.js, Sequelize, MySQL
+- Auth: JWT and bcrypt
+- External API: API-FOOTBALL from API-SPORTS
 
-idea for admin role: 
-    admin role prer somrab sync data
-    manage stream link 
-    manage top match of the day
+## Data Flow
+
+Normal users:
+- Read saved football data from MySQL through backend routes.
+- Do not trigger API-FOOTBALL requests.
+
+Admins:
+- Sync fixtures, teams, players, standings, and match details from API-FOOTBALL.
+- Add stream links.
+- Select the top match.
+- Award prediction points after a match ends.
+
+## Backend Entry
+
+```txt
+back/src/server.js
+```
+
+Local backend URL:
+
+```txt
+http://localhost:4000
+```
+
+## Important Rule
+
+Frontend must not call API-FOOTBALL directly. Public routes should stay database-only.

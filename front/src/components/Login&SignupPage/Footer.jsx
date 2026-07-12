@@ -14,7 +14,6 @@ const Footer = () => {
     { path: '/', label: 'Home' },
     { path: '/live', label: 'Live Scores' },
     { path: '/results', label: 'Results' },
-    { path: '/teams', label: 'Teams' },
     { path: '/stats', label: 'Statistics' },
     { path: '/about', label: 'About' },
   ];

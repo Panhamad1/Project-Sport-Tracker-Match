@@ -12,7 +12,7 @@ import {
     getCambodiaDateTimeFields,
 } from "../utils/cambodiaTime.js";
 
-// this will use admin for sync data and normal user only make request to database
+// Admin sync fetches API-FOOTBALL; public routes read database only.
 const sleep = (seconds) => {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 };
@@ -38,7 +38,7 @@ const getDaysCount = (from, to) => {
     return diffDays + 1;
 };
 //kleng dak league alov dak tah world cup sen teh
-const allowLeagueIds = [1,2];
+const allowLeagueIds = [1,2,113,103,244];
 const isLeagueAllowed = (apiLeagueId)=>{
     //ber allowleague like have nothing like this [] it mean we save every league 
     if(allowLeagueIds.length === 0){
@@ -85,21 +85,73 @@ const findFixturesFromDatabase = async (date) => {
     return fixtures;
 };
 
-const formatFixtureForResponse = (fixture) => {
-    const fixtureData = fixture.toJSON();
+const formatPublicLeague = (league) => {
+    if(!league){
+        return null;
+    }
 
     return {
-        ...fixtureData,
+        api_league_id: league.api_league_id,
+        name: league.name,
+        type: league.type,
+        logo: league.logo,
+        country: league.country,
+        season: league.season,
+    };
+};
+
+const formatPublicTeam = (team) => {
+    if(!team){
+        return null;
+    }
+
+    return {
+        api_team_id: team.api_team_id,
+        name: team.name,
+        code: team.code,
+        country: team.country,
+        logo: team.logo,
+        venue_name: team.venue_name,
+        venue_city: team.venue_city,
+    };
+};
+
+const formatFixtureForResponse = (fixture, { exposeLocalIds = false } = {}) => {
+    const fixtureData = fixture.toJSON();
+
+    if(exposeLocalIds){
+        return {
+            ...fixtureData,
+            ...getCambodiaDateTimeFields(fixtureData.match_date),
+        };
+    }
+
+    return {
+        public_match_id: fixtureData.api_fixture_id,
+        api_fixture_id: fixtureData.api_fixture_id,
+        season: fixtureData.season,
+        match_date: fixtureData.match_date,
+        status_long: fixtureData.status_long,
+        status_short: fixtureData.status_short,
+        elapsed: fixtureData.elapsed,
+        home_goals: fixtureData.home_goals,
+        away_goals: fixtureData.away_goals,
+        venue_name: fixtureData.venue_name,
+        venue_city: fixtureData.venue_city,
+        league: formatPublicLeague(fixtureData.league),
+        homeTeam: formatPublicTeam(fixtureData.homeTeam),
+        awayTeam: formatPublicTeam(fixtureData.awayTeam),
+        last_updated: fixtureData.last_updated,
         ...getCambodiaDateTimeFields(fixtureData.match_date),
     };
 };
 
-const getFixturesByDateFromDatabaseOnly = async (date) => {
+const getFixturesByDateFromDatabaseOnly = async (date, options = {}) => {
     if(!isValidDate(date)){
         throw new Error("Invalid Date format. Use YYYY-MM-DD");
     }   
     const fixtures = await findFixturesFromDatabase(date);
-    const formattedFixtures = fixtures.map(formatFixtureForResponse);
+    const formattedFixtures = fixtures.map((fixture) => formatFixtureForResponse(fixture, options));
 
     return {
         status: "success",
@@ -260,6 +312,56 @@ const fetchAndSaveFixturesFromApi = async (date) => {
 
     return fixtures.length;
 };
+
+const syncFixtureById = async (fixtureId) => {
+    const fixture = await Fixture.findByPk(fixtureId);
+
+    if (!fixture) {
+        return {
+            status: "not_found",
+            message: "Fixture not found in database",
+        };
+    }
+
+    const apiData = await apiFootballGet("/fixtures", {
+        id: fixture.api_fixture_id,
+    });
+    const apiFixtureData = apiData.response?.[0];
+
+    if (!apiFixtureData) {
+        return {
+            status: "not_found",
+            message: "Fixture not found from API-FOOTBALL",
+            fixture_id: fixture.id,
+            api_fixture_id: fixture.api_fixture_id,
+        };
+    }
+
+    if (!isLeagueAllowed(apiFixtureData.league?.id)) {
+        return {
+            status: "skipped",
+            message: "Fixture league is not allowed by current fixture filter",
+            fixture_id: fixture.id,
+            api_fixture_id: fixture.api_fixture_id,
+            api_league_id: apiFixtureData.league?.id,
+        };
+    }
+
+    const updatedFixture = await saveOrUpdateFixture(apiFixtureData);
+
+    return {
+        status: "success",
+        message: "Fixture refreshed successfully",
+        fixture_id: updatedFixture.id,
+        api_fixture_id: updatedFixture.api_fixture_id,
+        status_short: updatedFixture.status_short,
+        status_long: updatedFixture.status_long,
+        elapsed: updatedFixture.elapsed,
+        home_goals: updatedFixture.home_goals,
+        away_goals: updatedFixture.away_goals,
+        last_updated: updatedFixture.last_updated,
+    };
+};
 const syncFixturesByDateRange = async (from, to) => {
     if (!isValidDate(from) || !isValidDate(to)) {
         throw new Error("Invalid date format. Use YYYY-MM-DD");
@@ -317,5 +419,6 @@ const syncFixturesByDateRange = async (from, to) => {
 
 export {
     getFixturesByDateFromDatabaseOnly,
+    syncFixtureById,
     syncFixturesByDateRange,
 };

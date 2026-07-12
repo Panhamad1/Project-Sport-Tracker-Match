@@ -6,14 +6,20 @@ import {
 } from "../models/index.js";
 import { apiFootballGet } from "../providers/apiFootballProvider.js";
 
-const MAX_PLAYER_SYNC_PAGES = 10;
+const MAX_PLAYER_SYNC_PAGES = 3;
 
 const sleep = (seconds) => {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 };
 
-const saveOrUpdateLeague = async (apiLeague) => {
-    if (!apiLeague?.id || !apiLeague?.season) {
+const saveOrUpdateLeague = async (apiLeague, fallbackSeason = null) => {
+    if (!apiLeague?.id) {
+        return null;
+    }
+
+    const season = apiLeague.season || fallbackSeason;
+
+    if (!season) {
         return null;
     }
 
@@ -23,15 +29,18 @@ const saveOrUpdateLeague = async (apiLeague) => {
         type: null,
         logo: apiLeague.logo || null,
         country: apiLeague.country || null,
-        season: apiLeague.season,
-        raw_data: apiLeague,
+        season,
+        raw_data: {
+            ...apiLeague,
+            season,
+        },
         last_updated: new Date(),
     };
 
     const [league, created] = await League.findOrCreate({
         where: {
             api_league_id: apiLeague.id,
-            season: apiLeague.season,
+            season,
         },
         defaults: values,
     });
@@ -77,6 +86,43 @@ const saveOrUpdatePlayer = async (apiPlayer) => {
     return player;
 };
 
+const saveOrUpdateTeam = async (apiTeam) => {
+    if (!apiTeam?.id || !apiTeam?.name) {
+        return null;
+    }
+
+    const values = {
+        api_team_id: apiTeam.id,
+        name: apiTeam.name,
+        code: apiTeam.code || null,
+        country: apiTeam.country || null,
+        founded: apiTeam.founded ?? null,
+        logo: apiTeam.logo || null,
+        venue_name: null,
+        venue_city: null,
+        raw_data: apiTeam,
+        last_updated: new Date(),
+    };
+
+    const [team, created] = await Team.findOrCreate({
+        where: {
+            api_team_id: apiTeam.id,
+        },
+        defaults: values,
+    });
+
+    if (!created) {
+        await team.update({
+            name: apiTeam.name || team.name,
+            logo: apiTeam.logo || team.logo,
+            raw_data: apiTeam,
+            last_updated: new Date(),
+        });
+    }
+
+    return team;
+};
+
 const saveOrUpdatePlayerStatistic = async ({
     player,
     team,
@@ -119,7 +165,7 @@ const saveOrUpdatePlayerStatistic = async ({
     return playerStatistic;
 };
 
-const syncPlayersByTeamLeagueSeason = async ({ teamApiId, league, season }) => {
+const syncPlayersByTeamSeason = async ({ teamApiId, season }) => {
     const localTeam = await Team.findOne({
         where: {
             api_team_id: teamApiId,
@@ -130,23 +176,16 @@ const syncPlayersByTeamLeagueSeason = async ({ teamApiId, league, season }) => {
         throw new Error("Team not found in database. Run team sync first.");
     }
 
-    let localLeague = await League.findOne({
-        where: {
-            api_league_id: league,
-            season,
-        },
-    });
-
     let currentPage = 1;
     let totalPages = 1;
     let savedPlayersCount = 0;
     let savedStatisticsCount = 0;
     const syncedPlayerIds = new Set();
+    const syncedLeagueIds = new Set();
 
     while (currentPage <= totalPages && currentPage <= MAX_PLAYER_SYNC_PAGES) {
         const apiData = await apiFootballGet("/players", {
             team: teamApiId,
-            league,
             season,
             page: currentPage,
         });
@@ -162,22 +201,21 @@ const syncPlayersByTeamLeagueSeason = async ({ teamApiId, league, season }) => {
 
             syncedPlayerIds.add(player.id);
 
-            const statistic = (apiPlayerData.statistics || []).find((apiStatistic) => {
+            const statistics = (apiPlayerData.statistics || []).filter((apiStatistic) => {
                 return (
                     Number(apiStatistic.team?.id) === teamApiId &&
-                    Number(apiStatistic.league?.id) === league &&
-                    Number(apiStatistic.league?.season) === season
+                    Number(apiStatistic.league?.season || season) === season
                 );
             });
 
-            if (statistic) {
-                if (!localLeague) {
-                    localLeague = await saveOrUpdateLeague(statistic.league);
-                }
+            for (const statistic of statistics) {
+                const localLeague = await saveOrUpdateLeague(statistic.league, season);
 
                 if (!localLeague) {
-                    throw new Error("League data missing from API response. Cannot save player statistics.");
+                    continue;
                 }
+
+                syncedLeagueIds.add(localLeague.api_league_id);
 
                 await saveOrUpdatePlayerStatistic({
                     player,
@@ -200,14 +238,94 @@ const syncPlayersByTeamLeagueSeason = async ({ teamApiId, league, season }) => {
 
     return {
         teamApiId,
-        league,
         season,
         players_count: savedPlayersCount,
         statistics_count: savedStatisticsCount,
+        leagues_count: syncedLeagueIds.size,
+        leagues_synced: Array.from(syncedLeagueIds),
         pages_synced: currentPage - 1,
         total_pages: totalPages,
         stopped_early: totalPages > MAX_PLAYER_SYNC_PAGES,
+        max_pages_allowed: MAX_PLAYER_SYNC_PAGES,
     };
 };
 
-export { syncPlayersByTeamLeagueSeason };
+const syncPlayerByIdSeason = async ({ playerApiId, season }) => {
+    let currentPage = 1;
+    let totalPages = 1;
+    let savedPlayersCount = 0;
+    let savedStatisticsCount = 0;
+    const syncedPlayerIds = new Set();
+    const syncedTeamIds = new Set();
+    const syncedLeagueIds = new Set();
+
+    while (currentPage <= totalPages && currentPage <= MAX_PLAYER_SYNC_PAGES) {
+        const apiData = await apiFootballGet("/players", {
+            id: playerApiId,
+            season,
+            page: currentPage,
+        });
+
+        const apiPlayers = apiData.response || [];
+        totalPages = Number(apiData.paging?.total || 1);
+
+        for (const apiPlayerData of apiPlayers) {
+            const player = await saveOrUpdatePlayer(apiPlayerData.player);
+
+            if (!player) {
+                continue;
+            }
+
+            syncedPlayerIds.add(player.id);
+
+            const statistics = (apiPlayerData.statistics || []).filter((apiStatistic) => {
+                return Number(apiStatistic.league?.season || season) === season;
+            });
+
+            for (const statistic of statistics) {
+                const localTeam = await saveOrUpdateTeam(statistic.team);
+                const localLeague = await saveOrUpdateLeague(statistic.league, season);
+
+                if (!localTeam || !localLeague) {
+                    continue;
+                }
+
+                syncedTeamIds.add(localTeam.api_team_id);
+                syncedLeagueIds.add(localLeague.api_league_id);
+
+                await saveOrUpdatePlayerStatistic({
+                    player,
+                    team: localTeam,
+                    league: localLeague,
+                    season,
+                    apiStatistic: statistic,
+                });
+                savedStatisticsCount += 1;
+            }
+        }
+
+        savedPlayersCount = syncedPlayerIds.size;
+        currentPage += 1;
+
+        if (currentPage <= totalPages && currentPage <= MAX_PLAYER_SYNC_PAGES) {
+            await sleep(1);
+        }
+    }
+
+    return {
+        playerApiId,
+        season,
+        players_count: savedPlayersCount,
+        statistics_count: savedStatisticsCount,
+        teams_count: syncedTeamIds.size,
+        teams_synced: Array.from(syncedTeamIds),
+        leagues_count: syncedLeagueIds.size,
+        leagues_synced: Array.from(syncedLeagueIds),
+        pages_synced: currentPage - 1,
+        total_pages: totalPages,
+        stopped_early: totalPages > MAX_PLAYER_SYNC_PAGES,
+        max_pages_allowed: MAX_PLAYER_SYNC_PAGES,
+    };
+};
+
+export { syncPlayerByIdSeason, syncPlayersByTeamSeason };

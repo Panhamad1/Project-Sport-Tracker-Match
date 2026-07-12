@@ -5,11 +5,11 @@ const searchTeamsAndPlayers = async (req, res) => {
         const search = req.query.search || "";
         const type = req.query.type || "all";
 
-        const allowedTypes = ["all", "teams", "players"];
+        const allowedTypes = ["all", "teams", "leagues", "players", "matches"];
 
         if (!allowedTypes.includes(type.toLowerCase())) {
             return res.status(400).json({
-                message: "Invalid search type. Use all, teams, or players",
+                message: "Invalid search type. Use all, teams, leagues, players, or matches",
             });
         }
 
@@ -23,14 +23,18 @@ const searchTeamsAndPlayers = async (req, res) => {
             type,
             count: {
                 teams: result.teams.length,
+                leagues: result.leagues.length,
                 players: result.players.length,
+                matches: result.matches.length,
             },
             teams: result.teams,
+            leagues: result.leagues,
             players: result.players,
+            matches: result.matches,
         });
     } catch (err) {
         return res.status(500).json({
-            message: "Failed to search teams and players",
+            message: "Failed to search football data",
             error: err.message,
         });
     }

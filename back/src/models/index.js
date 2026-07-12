@@ -6,10 +6,17 @@ import Fixture from "./fixture.js";
 import Team from "./team.js";
 import FixtureSyncLog from "./fixtureSyncLog.js";
 import FavoriteTeam from "./favoriteTeam.js";
+import PinnedMatch from "./pinnedMatch.js";
 import Player from "./player.js";
 import PlayerStatistic from "./playerStatistic.js";
 import MatchDetail from "./matchDetail.js";
 import LeagueStanding from "./leagueStanding.js";
+import StreamLink from "./streamLink.js";
+import FeaturedFixture from "./featuredFixture.js";
+import Prediction from "./prediction.js";
+import DreamTeam from "./dreamTeam.js";
+import FixtureOdd from "./fixtureOdd.js";
+import PredictionPick from "./predictionPick.js";
 League.hasMany(Fixture,{
     foreignKey: "league_id",
     as:"fixtures",
@@ -70,6 +77,123 @@ FavoriteTeam.belongsTo(Team,{
     foreignKey:"team_id",
     as:"team",
 });
+User.hasMany(PinnedMatch, {
+    foreignKey: "user_id",
+    as: "pinnedMatches",
+    onDelete: "CASCADE",
+});
+PinnedMatch.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "user",
+});
+Fixture.hasMany(PinnedMatch, {
+    foreignKey: "fixture_id",
+    as: "pinnedMatchRecords",
+    onDelete: "CASCADE",
+});
+PinnedMatch.belongsTo(Fixture, {
+    foreignKey: "fixture_id",
+    as: "fixture",
+});
+User.hasMany(StreamLink, {
+    foreignKey: "added_by",
+    as: "addedStreamLinks",
+    onDelete: "CASCADE",
+});
+StreamLink.belongsTo(User, {
+    foreignKey: "added_by",
+    as: "admin",
+});
+Fixture.hasMany(StreamLink, {
+    foreignKey: "fixture_id",
+    as: "streamLinks",
+    onDelete: "CASCADE",
+});
+StreamLink.belongsTo(Fixture, {
+    foreignKey: "fixture_id",
+    as: "fixture",
+});
+User.hasMany(FeaturedFixture, {
+    foreignKey: "selected_by",
+    as: "selectedFeaturedFixtures",
+    onDelete: "CASCADE",
+});
+FeaturedFixture.belongsTo(User, {
+    foreignKey: "selected_by",
+    as: "selector",
+});
+Fixture.hasMany(FeaturedFixture, {
+    foreignKey: "fixture_id",
+    as: "featuredFixtureRecords",
+    onDelete: "CASCADE",
+});
+FeaturedFixture.belongsTo(Fixture, {
+    foreignKey: "fixture_id",
+    as: "fixture",
+});
+User.hasMany(Prediction, {
+    foreignKey: "user_id",
+    as: "predictions",
+    onDelete: "CASCADE",
+});
+Prediction.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "user",
+});
+Fixture.hasMany(Prediction, {
+    foreignKey: "fixture_id",
+    as: "predictionRecords",
+    onDelete: "CASCADE",
+});
+Prediction.belongsTo(Fixture, {
+    foreignKey: "fixture_id",
+    as: "fixture",
+});
+Fixture.hasMany(FixtureOdd, {
+    foreignKey: "fixture_id",
+    as: "odds",
+    onDelete: "CASCADE",
+});
+FixtureOdd.belongsTo(Fixture, {
+    foreignKey: "fixture_id",
+    as: "fixture",
+});
+User.hasMany(PredictionPick, {
+    foreignKey: "user_id",
+    as: "predictionPicks",
+    onDelete: "CASCADE",
+});
+PredictionPick.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "user",
+});
+Fixture.hasMany(PredictionPick, {
+    foreignKey: "fixture_id",
+    as: "predictionPicks",
+    onDelete: "CASCADE",
+});
+PredictionPick.belongsTo(Fixture, {
+    foreignKey: "fixture_id",
+    as: "fixture",
+});
+FixtureOdd.hasMany(PredictionPick, {
+    foreignKey: "fixture_odd_id",
+    as: "predictionPicks",
+    onDelete: "CASCADE",
+});
+PredictionPick.belongsTo(FixtureOdd, {
+    foreignKey: "fixture_odd_id",
+    as: "odd",
+});
+User.hasMany(DreamTeam, {
+    foreignKey: "user_id",
+    as: "dreamTeams",
+    onDelete: "CASCADE",
+});
+DreamTeam.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "user",
+});
 Player.hasMany(PlayerStatistic,{
     foreignKey:"player_id",
     as: "statistics",
@@ -112,4 +236,4 @@ PlayerStatistic.belongsTo(League, {
 });
 
 
-export { sequelize, User, League, Team, Fixture, FixtureSyncLog, FavoriteTeam, Player, PlayerStatistic, MatchDetail, LeagueStanding };
+export { sequelize, User, League, Team, Fixture, FixtureSyncLog, FavoriteTeam, PinnedMatch, Player, PlayerStatistic, MatchDetail, LeagueStanding, StreamLink, FeaturedFixture, Prediction, DreamTeam, FixtureOdd, PredictionPick };

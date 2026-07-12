@@ -67,7 +67,7 @@ export async function register(req,res){
                 username: user.username,
                 email: user.email,
                 language: user.language,
-                points: user.points,
+                points: Number(user.points || 0),
             },
         });
     } catch(err){
@@ -116,7 +116,7 @@ export async function login(req,res){
                 username: user.username,
                 email: user.email,
                 language: user.language,
-                points: user.points,
+                points: Number(user.points || 0),
             },
         });
     }catch(err){

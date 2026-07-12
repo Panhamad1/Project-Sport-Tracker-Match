@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
-import { FaFutbol, FaHome, FaTv, FaTrophy, FaUsers, FaChartBar } from 'react-icons/fa';
+import { FaFutbol, FaHome, FaTv, FaTrophy, FaChartBar } from 'react-icons/fa';
 
 const NavigationBar = () => {
   const navLinks = [
     { path: '/home', label: 'Home', icon: <FaHome /> },
     { path: '/live', label: 'Live Scores', icon: <FaTv /> },
     { path: '/results', label: 'Results', icon: <FaTrophy /> },
-    { path: '/teams', label: 'Teams', icon: <FaUsers /> },
     { path: '/stats', label: 'Statistics', icon: <FaChartBar /> },
   ];
 

@@ -1,16 +1,16 @@
-import { getMatchByIdFromDatabaseOnly } from "../services/matchService.js";
+import { getMatchByApiFixtureIdFromDatabaseOnly } from "../services/matchService.js";
 
 const getMatchById = async (req, res) => {
     try {
-        const matchId = Number(req.params.matchId);
+        const apiFixtureId = Number(req.params.matchId);
 
-        if (!Number.isInteger(matchId) || matchId <= 0) {
+        if (!Number.isInteger(apiFixtureId) || apiFixtureId <= 0) {
             return res.status(400).json({
                 message: "Invalid match id",
             });
         }
 
-        const result = await getMatchByIdFromDatabaseOnly(matchId);
+        const result = await getMatchByApiFixtureIdFromDatabaseOnly(apiFixtureId);
 
         if (!result.match) {
             return res.status(404).json({
