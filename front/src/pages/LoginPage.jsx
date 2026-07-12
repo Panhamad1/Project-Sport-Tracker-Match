@@ -76,7 +76,7 @@ const LoginPage = () => {
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
                   <span className="text-[#8b5cf6] shrink-0">✓</span>
-                  <span>AI-powered match predictions</span>
+                  <span>Odds-based match predictions</span>
                 </div>
               </div>
 
