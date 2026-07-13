@@ -1,7 +1,8 @@
 import axios from "axios";
+import { buildApiUrl } from "../apiConfig.js";
 
 const API = axios.create({
-  baseURL: "http://localhost:4000/api/admin/featured-fixtures",
+  baseURL: buildApiUrl("/api/admin/featured-fixtures"),
   headers: {
     "Content-Type": "application/json",
   },
@@ -40,4 +41,3 @@ export const selectTopMatch = ({ apiFixtureId, label = "Top Match" }) => {
     label,
   }));
 };
-

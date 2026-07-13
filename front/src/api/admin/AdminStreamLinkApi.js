@@ -1,7 +1,8 @@
 import axios from "axios";
+import { buildApiUrl } from "../apiConfig.js";
 
 const API = axios.create({
-  baseURL: "http://localhost:4000/api/admin/stream-links",
+  baseURL: buildApiUrl("/api/admin/stream-links"),
   headers: {
     "Content-Type": "application/json",
   },

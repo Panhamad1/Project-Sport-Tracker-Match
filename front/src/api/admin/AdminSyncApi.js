@@ -1,7 +1,8 @@
 import axios from "axios";
+import { buildApiUrl } from "../apiConfig.js";
 
 const API = axios.create({
-    baseURL: "http://localhost:4000/api/admin/sync",
+    baseURL: buildApiUrl("/api/admin/sync"),
     headers: {
         "Content-Type": "application/json",
     },

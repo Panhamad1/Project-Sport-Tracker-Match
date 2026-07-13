@@ -1,7 +1,8 @@
 import axios from "axios";
+import { buildApiUrl } from "../apiConfig.js";
 
 const API = axios.create({
-  baseURL: "http://localhost:4000/api/dream-team",
+  baseURL: buildApiUrl("/api/dream-team"),
   headers: {
     "Content-Type": "application/json",
   },
