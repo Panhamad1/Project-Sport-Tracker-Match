@@ -12,14 +12,36 @@ import LeaderboardPage from '../pages/LeaderboardPage';
 import LeaguesPage from '../pages/LeaguesPage';
 import NewsPage from '../pages/NewsPage';
 import PredictionPage from '../pages/PredictionPage';
+import TeamPage from '../pages/TeamPage';
+import PlayerPage from '../pages/PlayerPage';
+import DreamTeamPage from '../pages/DreamTeamPage';
+import { useAuth } from '../hooks/useAuth';
+
+const GuestOnlyRoute = ({ children }) => {
+    const { user, loading } = useAuth();
+
+    if(loading){
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#050505] text-sm text-gray-400">
+                Checking account...
+            </div>
+        );
+    }
+
+    if(user){
+        return <Navigate to="/home" replace />;
+    }
+
+    return children;
+};
 
 function AppRouter() {
   return (
     <BrowserRouter>
         <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<SignupPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/login" element={<GuestOnlyRoute><LoginPage /></GuestOnlyRoute>} />
+            <Route path="/" element={<GuestOnlyRoute><SignupPage /></GuestOnlyRoute>} />
+            <Route path="/signup" element={<GuestOnlyRoute><SignupPage /></GuestOnlyRoute>} />
 
             <Route element={<MainLayout />}>
                 <Route path="/home" element={<HomePage />} />
@@ -33,7 +55,10 @@ function AppRouter() {
                 <Route path="/profile/settings" element={<ProfilePage />} />
                 <Route path="/matches" element={<MatchesPage />} />
                 <Route path="/matches/:matchId" element={<MatchDetailPage />} />
+                <Route path="/teams/:teamApiId" element={<TeamPage />} />
+                <Route path="/players/:playerApiId" element={<PlayerPage />} />
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/dream-team" element={<DreamTeamPage />} />
                 <Route path="/admin" element={<AdminPanelPage />} />
             </Route>
         </Routes>

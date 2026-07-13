@@ -1,9 +1,29 @@
-import { getFixturesByDateFromDatabaseOnly,syncFixtureById,syncFixturesByDateRange } from "../services/fixtureService.js";
+import {
+    getFixtureFeedFromDatabaseOnly,
+    getFixturesByDateFromDatabaseOnly,
+    syncFixtureById,
+    syncFixturesByDateRange,
+} from "../services/fixtureService.js";
 // ah nis somrab fetch fixture tam date jg frontend trov bos date oy backend format: YYYY-MM-DD
+const CAMBODIA_OFFSET_MS = 7 * 60 * 60 * 1000;
+
+const isValidDate = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date);
+
+const getCambodiaToday = () => {
+    return new Date(Date.now() + CAMBODIA_OFFSET_MS).toISOString().slice(0, 10);
+};
+
+const addDaysToDate = (date, days) => {
+    const currentDate = new Date(`${date}T00:00:00.000Z`);
+    currentDate.setUTCDate(currentDate.getUTCDate() + days);
+
+    return currentDate.toISOString().slice(0, 10);
+};
+
 const getFixturesByDate = async (req,res) => {
     try{
         const { date } = req.params;
-        const isValidate = /^\d{4}-\d{2}-\d{2}$/.test(date);
+        const isValidate = isValidDate(date);
         if(!isValidate){
             return res.status(400).json({
                 message: "Invalid Date Format. Use YYYY-MM-DD",
@@ -41,10 +61,49 @@ const getFixturesByDate = async (req,res) => {
     }
 };
 
+const getFixtureFeed = async (req,res) => {
+    try{
+        const today = getCambodiaToday();
+        const from = req.query.from || addDaysToDate(today, -7);
+        const to = req.query.to || addDaysToDate(today, 7);
+        const limit = Number(req.query.limit || 40);
+
+        if(!isValidDate(from) || !isValidDate(to)){
+            return res.status(400).json({
+                message: "Invalid Date Format. Use YYYY-MM-DD",
+            });
+        }
+
+        const result = await getFixtureFeedFromDatabaseOnly({
+            from,
+            to,
+            limit: Number.isInteger(limit) ? limit : 40,
+        });
+
+        return res.status(200).json({
+            message:
+              result.fixtures.length === 0
+                ? "No fixtures found for this feed"
+                : "Fixture feed loaded successfully",
+            from,
+            to,
+            source: result.source,
+            timezone: result.timezone,
+            count: result.fixtures.length,
+            fixtures: result.fixtures,
+        });
+    }catch(err){
+        return res.status(500).json({
+            message: "Fail To Load Fixture Feed",
+            error: err.message,
+        });
+    }
+};
+
 const getAdminFixturesByDate = async (req,res) => {
     try{
         const { date } = req.params;
-        const isValidate = /^\d{4}-\d{2}-\d{2}$/.test(date);
+        const isValidate = isValidDate(date);
 
         if(!isValidate){
             return res.status(400).json({
@@ -139,4 +198,4 @@ const syncFixture = async(req,res) =>{
     }
 };
 
-export { getAdminFixturesByDate, getFixturesByDate, syncFixture, syncFixtures};
+export { getAdminFixturesByDate, getFixtureFeed, getFixturesByDate, syncFixture, syncFixtures};

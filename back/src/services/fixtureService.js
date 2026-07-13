@@ -6,6 +6,7 @@ import {
   FixtureSyncLog,
 } from "../models/index.js";
 import { apiFootballGet } from "../providers/apiFootballProvider.js";
+import { awardPredictionPointsService } from "./predictionService.js";
 import {
     CAMBODIA_TIMEZONE,
     getCambodiaDateRange,
@@ -39,6 +40,7 @@ const getDaysCount = (from, to) => {
 };
 //kleng dak league alov dak tah world cup sen teh
 const allowLeagueIds = [1,2,113,103,244];
+const finishedStatusShortCodes = ["FT", "AET", "PEN"];
 const isLeagueAllowed = (apiLeagueId)=>{
     //ber allowleague like have nothing like this [] it mean we save every league 
     if(allowLeagueIds.length === 0){
@@ -47,13 +49,12 @@ const isLeagueAllowed = (apiLeagueId)=>{
     return allowLeagueIds.includes(Number(apiLeagueId));
 }
 
-const findFixturesFromDatabase = async (date) => {
-    const { startDate, endDate } = getCambodiaDateRange(date);
-
+const buildLeagueInclude = () => {
     const leagueInclude = {
         model: League,
         as: "league",
     };
+
     if(allowLeagueIds.length > 0){
         leagueInclude.where = {
             api_league_id:{
@@ -62,6 +63,13 @@ const findFixturesFromDatabase = async (date) => {
         };
         leagueInclude.required = true;
     };
+
+    return leagueInclude;
+};
+
+const findFixturesFromDatabase = async (date) => {
+    const { startDate, endDate } = getCambodiaDateRange(date);
+
     const fixtures = await Fixture.findAll({
       where: {
         match_date: {
@@ -69,7 +77,7 @@ const findFixturesFromDatabase = async (date) => {
             },
         },
         include: [
-            leagueInclude,
+            buildLeagueInclude(),
             {
                 model: Team,
                 as: "homeTeam",
@@ -80,6 +88,34 @@ const findFixturesFromDatabase = async (date) => {
             },
         ],
         order: [["match_date", "ASC"]],
+    });
+
+    return fixtures;
+};
+
+const findFixturesFromDatabaseByDateRange = async ({ from, to, limit }) => {
+    const { startDate } = getCambodiaDateRange(from);
+    const { endDate } = getCambodiaDateRange(to);
+
+    const fixtures = await Fixture.findAll({
+        where: {
+            match_date: {
+                [Op.between]: [startDate, endDate],
+            },
+        },
+        include: [
+            buildLeagueInclude(),
+            {
+                model: Team,
+                as: "homeTeam",
+            },
+            {
+                model: Team,
+                as: "awayTeam",
+            },
+        ],
+        order: [["match_date", "ASC"]],
+        limit,
     });
 
     return fixtures;
@@ -288,6 +324,63 @@ const saveOrUpdateFixture = async (apiFixtureData) => {
 
     return fixture;
 };
+
+const awardPredictionsForFinishedFixture = async (fixture) => {
+    const statusShort = String(fixture.status_short || "").toUpperCase();
+
+    if(!finishedStatusShortCodes.includes(statusShort)){
+        return null;
+    }
+
+    if(fixture.home_goals === null || fixture.home_goals === undefined || fixture.away_goals === null || fixture.away_goals === undefined){
+        return null;
+    }
+
+    try{
+        return await awardPredictionPointsService(fixture.api_fixture_id);
+    }catch(error){
+        return {
+            status: "failed",
+            message: "Failed to award prediction points",
+            error_message: error.message,
+        };
+    }
+};
+
+const getFixtureFeedFromDatabaseOnly = async ({ from, to, limit = 40 } = {}) => {
+    if(!isValidDate(from) || !isValidDate(to)){
+        throw new Error("Invalid date format. Use YYYY-MM-DD");
+    }
+
+    const daysCount = getDaysCount(from, to);
+
+    if(daysCount <= 0){
+        throw new Error("From date must be before or equal to to date");
+    }
+
+    if(daysCount > 31){
+        throw new Error("Fixture feed can load maximum 31 days at one time");
+    }
+
+    const safeLimit = Number.isInteger(limit) && limit > 0 && limit <= 100 ? limit : 40;
+    const fixtures = await findFixturesFromDatabaseByDateRange({
+        from,
+        to,
+        limit: safeLimit,
+    });
+    const formattedFixtures = fixtures.map((fixture) => formatFixtureForResponse(fixture));
+
+    return {
+        status: "success",
+        source: "database_only",
+        timezone: CAMBODIA_TIMEZONE,
+        message: formattedFixtures.length === 0 ? "No fixtures found in database for this feed" : "Fixture feed loaded successfully",
+        count: formattedFixtures.length,
+        fixtures: formattedFixtures,
+        apiRequestUsed: false,
+    };
+};
+
 const fetchAndSaveFixturesFromApi = async (date) => {
     const timezone = process.env.API_FOOTBALL_TIMEZONE || "Asia/Phnom_Penh";
 
@@ -299,8 +392,15 @@ const fetchAndSaveFixturesFromApi = async (date) => {
     const fixtures = apiFixtures.filter((fixture) => isLeagueAllowed(fixture.league?.id));
     console.log(`API fixtures: ${apiFixtures.length}, saved after filter: ${fixtures.length}`);
 
+    const predictionAwards = [];
+
     for (const fixture of fixtures) {
-        await saveOrUpdateFixture(fixture);
+        const savedFixture = await saveOrUpdateFixture(fixture);
+        const awardResult = await awardPredictionsForFinishedFixture(savedFixture);
+
+        if(awardResult){
+            predictionAwards.push(awardResult);
+        }
     }
 
     await saveOrUpdateSyncLog({
@@ -310,7 +410,10 @@ const fetchAndSaveFixturesFromApi = async (date) => {
         errorMessage: null,
     });
 
-    return fixtures.length;
+    return {
+        savedCount: fixtures.length,
+        predictionAwards,
+    };
 };
 
 const syncFixtureById = async (fixtureId) => {
@@ -348,10 +451,13 @@ const syncFixtureById = async (fixtureId) => {
     }
 
     const updatedFixture = await saveOrUpdateFixture(apiFixtureData);
+    const predictionAward = await awardPredictionsForFinishedFixture(updatedFixture);
 
     return {
         status: "success",
-        message: "Fixture refreshed successfully",
+        message: predictionAward?.newly_awarded > 0
+            ? "Fixture refreshed and prediction points awarded successfully"
+            : "Fixture refreshed successfully",
         fixture_id: updatedFixture.id,
         api_fixture_id: updatedFixture.api_fixture_id,
         status_short: updatedFixture.status_short,
@@ -360,6 +466,7 @@ const syncFixtureById = async (fixtureId) => {
         home_goals: updatedFixture.home_goals,
         away_goals: updatedFixture.away_goals,
         last_updated: updatedFixture.last_updated,
+        prediction_award: predictionAward,
     };
 };
 const syncFixturesByDateRange = async (from, to) => {
@@ -383,13 +490,21 @@ const syncFixturesByDateRange = async (from, to) => {
 
     while (currentDate <= to) {
         try{
-            const savedCount = await fetchAndSaveFixturesFromApi(currentDate);
+            const syncResult = await fetchAndSaveFixturesFromApi(currentDate);
+            const savedCount = syncResult.savedCount;
+            const newlyAwarded = syncResult.predictionAwards.reduce((total, awardResult) => {
+                return total + Number(awardResult.newly_awarded || 0);
+            }, 0);
+
             results.push({
                 date: currentDate,
                 status: "success",
                 source: "api_football_admin_sync",
                 count: savedCount,
-                message: savedCount === 0 ? "No fixtures found for this date" : "fixtures sync from api and save to database",
+                message: newlyAwarded > 0
+                    ? `Fixtures synced and ${newlyAwarded} prediction pick${newlyAwarded === 1 ? "" : "s"} awarded`
+                    : savedCount === 0 ? "No fixtures found for this date" : "fixtures sync from api and save to database",
+                prediction_awards: syncResult.predictionAwards,
                 error_message: null,
             });
         }catch(error){
@@ -418,6 +533,7 @@ const syncFixturesByDateRange = async (from, to) => {
 };
 
 export {
+    getFixtureFeedFromDatabaseOnly,
     getFixturesByDateFromDatabaseOnly,
     syncFixtureById,
     syncFixturesByDateRange,

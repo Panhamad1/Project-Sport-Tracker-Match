@@ -84,6 +84,7 @@ const FORMATIONS = {
 
 const DEFAULT_FORMATION = "4-3-3";
 const DEFAULT_NAME = "My Dream Team";
+const MAX_DREAM_TEAMS = 3;
 
 const cleanText = (value) => {
     if (typeof value !== "string") {
@@ -115,6 +116,15 @@ const getDreamTeamFormationsService = () => {
     }));
 };
 
+const getPlayerDisplayName = (player) => {
+    const fullName = [player.firstname, player.lastname]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+    return fullName || player.name;
+};
+
 const formatDreamTeam = (dreamTeam) => {
     if (!dreamTeam) {
         return null;
@@ -135,7 +145,9 @@ const formatDreamTeam = (dreamTeam) => {
     };
 };
 
-const normalizePlayers = async (rawPlayers, formation) => {
+const normalizePlayers = async (rawPlayers, formation, options = {}) => {
+    const { requireComplete = false } = options;
+
     if (!Array.isArray(rawPlayers)) {
         return {
             error: "players must be an array",
@@ -147,6 +159,12 @@ const normalizePlayers = async (rawPlayers, formation) => {
     if (rawPlayers.length > slotMap.size) {
         return {
             error: `players cannot be more than ${slotMap.size} for ${formation}`,
+        };
+    }
+
+    if (requireComplete && rawPlayers.length !== slotMap.size) {
+        return {
+            error: `Complete all ${slotMap.size} positions before saving`,
         };
     }
 
@@ -202,6 +220,16 @@ const normalizePlayers = async (rawPlayers, formation) => {
         });
     }
 
+    if (requireComplete) {
+        const missingSlots = [...slotMap.keys()].filter((slot) => !usedSlots.has(slot));
+
+        if (missingSlots.length > 0) {
+            return {
+                error: `Complete all ${slotMap.size} positions before saving. Missing: ${missingSlots.join(", ")}`,
+            };
+        }
+    }
+
     if (normalizedPlayers.length === 0) {
         return {
             players: [],
@@ -217,6 +245,8 @@ const normalizePlayers = async (rawPlayers, formation) => {
         attributes: [
             "api_player_id",
             "name",
+            "firstname",
+            "lastname",
             "photo",
             "nationality",
         ],
@@ -243,7 +273,7 @@ const normalizePlayers = async (rawPlayers, formation) => {
             slot: player.slot,
             position: player.position,
             api_player_id: player.api_player_id,
-            name: dbPlayer?.name || player.name,
+            name: dbPlayer ? getPlayerDisplayName(dbPlayer) : player.name,
             photo: dbPlayer?.photo || player.photo,
             nationality: dbPlayer?.nationality || player.nationality,
         };
@@ -262,7 +292,8 @@ const normalizePlayers = async (rawPlayers, formation) => {
     };
 };
 
-const normalizeDreamTeamPayload = async (payload, currentDreamTeam = null) => {
+const normalizeDreamTeamPayload = async (payload, currentDreamTeam = null, options = {}) => {
+    const { requireComplete = true } = options;
     const requestedName = cleanText(payload.name);
     const name = requestedName || currentDreamTeam?.name || DEFAULT_NAME;
 
@@ -295,7 +326,9 @@ const normalizeDreamTeamPayload = async (payload, currentDreamTeam = null) => {
         : formationChanged
             ? []
             : currentDreamTeam?.players || [];
-    const normalizedPlayers = await normalizePlayers(rawPlayers, formation);
+    const normalizedPlayers = await normalizePlayers(rawPlayers, formation, {
+        requireComplete,
+    });
 
     if (normalizedPlayers.error) {
         return {
@@ -313,23 +346,39 @@ const normalizeDreamTeamPayload = async (payload, currentDreamTeam = null) => {
 };
 
 const getMyDreamTeamService = async (userId) => {
-    const dreamTeam = await DreamTeam.findOne({
+    const dreamTeams = await DreamTeam.findAll({
         where: {
             user_id: userId,
         },
+        order: [["updated_at", "DESC"], ["id", "ASC"]],
     });
 
-    return formatDreamTeam(dreamTeam);
+    const formattedDreamTeams = dreamTeams.map(formatDreamTeam);
+
+    return {
+        dreamTeam: formattedDreamTeams[0] || null,
+        dreamTeams: formattedDreamTeams,
+        maxDreamTeams: MAX_DREAM_TEAMS,
+    };
 };
 
 const saveMyDreamTeamService = async (userId, payload) => {
-    const currentDreamTeam = await DreamTeam.findOne({
+    const dreamTeamCount = await DreamTeam.count({
         where: {
             user_id: userId,
         },
     });
 
-    const normalizedPayload = await normalizeDreamTeamPayload(payload, currentDreamTeam);
+    if (dreamTeamCount >= MAX_DREAM_TEAMS) {
+        return {
+            status: "invalid",
+            message: `You can save up to ${MAX_DREAM_TEAMS} dream teams`,
+        };
+    }
+
+    const normalizedPayload = await normalizeDreamTeamPayload(payload, null, {
+        requireComplete: true,
+    });
 
     if (normalizedPayload.error) {
         return {
@@ -338,25 +387,16 @@ const saveMyDreamTeamService = async (userId, payload) => {
         };
     }
 
-    if (!currentDreamTeam) {
-        const dreamTeam = await DreamTeam.create({
-            user_id: userId,
-            ...normalizedPayload.values,
-        });
-
-        return {
-            status: "success",
-            created: true,
-            dreamTeam: formatDreamTeam(dreamTeam),
-        };
-    }
-
-    await currentDreamTeam.update(normalizedPayload.values);
+    const dreamTeam = await DreamTeam.create({
+        user_id: userId,
+        ...normalizedPayload.values,
+    });
 
     return {
         status: "success",
-        created: false,
-        dreamTeam: formatDreamTeam(currentDreamTeam),
+        created: true,
+        dreamTeam: formatDreamTeam(dreamTeam),
+        maxDreamTeams: MAX_DREAM_TEAMS,
     };
 };
 
@@ -375,7 +415,9 @@ const updateDreamTeamService = async (userId, dreamTeamId, payload) => {
         };
     }
 
-    const normalizedPayload = await normalizeDreamTeamPayload(payload, dreamTeam);
+    const normalizedPayload = await normalizeDreamTeamPayload(payload, dreamTeam, {
+        requireComplete: true,
+    });
 
     if (normalizedPayload.error) {
         return {
@@ -389,6 +431,7 @@ const updateDreamTeamService = async (userId, dreamTeamId, payload) => {
     return {
         status: "success",
         dreamTeam: formatDreamTeam(dreamTeam),
+        maxDreamTeams: MAX_DREAM_TEAMS,
     };
 };
 
@@ -403,6 +446,7 @@ const deleteDreamTeamService = async (userId, dreamTeamId) => {
     return {
         status: deletedCount === 0 ? "not_found" : "success",
         message: deletedCount === 0 ? "Dream team not found" : "Dream team deleted successfully",
+        maxDreamTeams: MAX_DREAM_TEAMS,
     };
 };
 

@@ -11,7 +11,7 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col scrollbar-hide">
       <NavigationBar onToggleSidebar={toggleSidebar} isExpanded={isSidebarExpanded}/>
       <div className="flex flex-1">
         <SideBar isExpanded={isSidebarExpanded} />

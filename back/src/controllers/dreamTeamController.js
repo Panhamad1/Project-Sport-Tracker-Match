@@ -21,11 +21,13 @@ const getDreamTeamFormations = (req, res) => {
 
 const getMyDreamTeam = async (req, res) => {
     try {
-        const dreamTeam = await getMyDreamTeamService(req.user.id);
+        const result = await getMyDreamTeamService(req.user.id);
 
         return res.status(200).json({
-            message: dreamTeam ? "Dream team loaded successfully" : "No dream team yet",
-            dreamTeam,
+            message: result.dreamTeam ? "Dream teams loaded successfully" : "No dream team yet",
+            dreamTeam: result.dreamTeam,
+            dreamTeams: result.dreamTeams,
+            maxDreamTeams: result.maxDreamTeams,
         });
     } catch (error) {
         return res.status(500).json({
@@ -48,6 +50,7 @@ const saveMyDreamTeam = async (req, res) => {
         return res.status(result.created ? 201 : 200).json({
             message: result.created ? "Dream team created successfully" : "Dream team updated successfully",
             dreamTeam: result.dreamTeam,
+            maxDreamTeams: result.maxDreamTeams,
         });
     } catch (error) {
         return res.status(500).json({
@@ -84,6 +87,7 @@ const updateDreamTeam = async (req, res) => {
         return res.status(200).json({
             message: "Dream team updated successfully",
             dreamTeam: result.dreamTeam,
+            maxDreamTeams: result.maxDreamTeams,
         });
     } catch (error) {
         return res.status(500).json({
@@ -113,6 +117,7 @@ const deleteDreamTeam = async (req, res) => {
 
         return res.status(200).json({
             message: result.message,
+            maxDreamTeams: result.maxDreamTeams,
         });
     } catch (error) {
         return res.status(500).json({

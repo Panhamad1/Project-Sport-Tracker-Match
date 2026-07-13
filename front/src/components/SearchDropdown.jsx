@@ -85,6 +85,9 @@ const SimpleResult = ({ item, type, onSelect }) => {
 
   const image = item.logo || item.photo;
   const subtitle = item.country || item.nationality || (item.season ? `Season ${item.season}` : null);
+  const title = type === 'players'
+    ? item.display_name || item.full_name || item.name
+    : item.name;
 
   return (
     <button
@@ -94,7 +97,7 @@ const SimpleResult = ({ item, type, onSelect }) => {
     >
       <ResultIcon image={image} icon={iconMap[type]} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white">{item.name}</p>
+        <p className="truncate text-sm font-semibold text-white">{title}</p>
         <p className="truncate text-xs text-gray-500">
           {type.slice(0, -1)}{subtitle ? ` - ${subtitle}` : ''}
         </p>
@@ -248,6 +251,27 @@ const SearchDropdown = () => {
 
     if (item.type === 'matches' && item.api_fixture_id) {
       navigate(`/matches/${item.api_fixture_id}`);
+      setIsOpen(false);
+      setSearchText('');
+      return;
+    }
+
+    if (item.type === 'leagues' && item.api_league_id) {
+      navigate(`/leagues?league=${item.api_league_id}&season=${item.season || ''}`);
+      setIsOpen(false);
+      setSearchText('');
+      return;
+    }
+
+    if (item.type === 'teams' && item.api_team_id) {
+      navigate(`/teams/${item.api_team_id}`);
+      setIsOpen(false);
+      setSearchText('');
+      return;
+    }
+
+    if (item.type === 'players' && item.api_player_id) {
+      navigate(`/players/${item.api_player_id}`);
       setIsOpen(false);
       setSearchText('');
     }

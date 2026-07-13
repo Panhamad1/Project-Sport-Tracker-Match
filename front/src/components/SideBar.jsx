@@ -13,6 +13,7 @@ import {
   FaTrophy,
   FaTv,
   FaUserCircle,
+  FaUsers,
 } from 'react-icons/fa';
 import { useAuth } from '../hooks/useAuth';
 
@@ -30,6 +31,7 @@ const SideBar = ({ isExpanded }) => {
     { path: '/matches', label: 'Matches', icon: <FaTv /> },
     { path: '/leaderboard', label: 'Leaderboard', icon: <FaTrophy /> },
     { path: '/prediction', label: 'Predictions', icon: <FaChartLine /> },
+    { path: '/dream-team', label: 'Dream Team', icon: <FaUsers /> },
     { path: '/news', label: 'News', icon: <FaNewspaper /> },
   ];
 

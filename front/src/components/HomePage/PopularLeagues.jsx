@@ -1,13 +1,11 @@
 import { Link } from 'react-router-dom';
 import { FaArrowRight, FaTrophy } from 'react-icons/fa';
 
-const popularLeagues = [
-    { id: 1, name: 'Premier League', country: 'England', logo: 'ENG', teams: 20 },
-    { id: 2, name: 'La Liga', country: 'Spain', logo: 'ESP', teams: 20 },
-    { id: 3, name: 'Bundesliga', country: 'Germany', logo: 'GER', teams: 18 },
-    { id: 4, name: 'Serie A', country: 'Italy', logo: 'ITA', teams: 20 },
-    { id: 5, name: 'Ligue 1', country: 'France', logo: 'FRA', teams: 18 },
-    { id: 6, name: 'Champions League', country: 'Europe', logo: 'UCL', teams: 32 },
+const leagues = [
+    { id: 39, name: 'Premier League', country: 'England', season: 2024 },
+    { id: 140, name: 'LaLiga', country: 'Spain', season: 2024 },
+    { id: 307, name: 'Saudi Pro League', country: 'Saudi Arabia', season: 2024 },
+    { id: 253, name: 'Major League Soccer', country: 'United States', season: 2024 },
 ];
 
 const PopularLeagues = () => {
@@ -16,7 +14,7 @@ const PopularLeagues = () => {
             <div className="mb-3 flex items-center justify-between">
                 <h3 className="flex items-center gap-2 text-sm font-semibold">
                     <FaTrophy className="text-[#8b5cf6]" />
-                    Popular Leagues
+                    Saved Leagues
                 </h3>
                 <Link to="/leagues" className="flex items-center gap-1 text-xs text-[#8b5cf6] transition-colors hover:text-[#a78bfa]">
                     View All
@@ -25,20 +23,20 @@ const PopularLeagues = () => {
             </div>
 
             <div className="space-y-1.5">
-                {popularLeagues.map((league) => (
+                {leagues.map((league) => (
                     <Link
                         key={league.id}
-                        to={`/leagues/${league.name.toLowerCase().replace(/ /g, '-')}`}
+                        to={`/leagues?league=${league.id}&season=${league.season}`}
                         className="group flex items-center justify-between rounded-lg p-2 transition-all duration-200 hover:bg-[#2a2a2a]"
                     >
-                        <div className="flex items-center gap-2.5">
-                            <span className="rounded-md bg-black/30 px-2 py-1 text-[10px] font-bold text-[#a78bfa]">{league.logo}</span>
-                            <div className="flex flex-col">
-                                <span className="text-xs font-medium text-white transition-colors group-hover:text-[#8b5cf6]">{league.name}</span>
-                                <span className="text-[9px] text-gray-500">{league.country} - {league.teams} teams</span>
+                        <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="rounded-md bg-black/30 px-2 py-1 text-[10px] font-bold text-[#a78bfa]">{league.id}</span>
+                            <div className="flex min-w-0 flex-col">
+                                <span className="truncate text-xs font-medium text-white transition-colors group-hover:text-[#8b5cf6]">{league.name}</span>
+                                <span className="text-[9px] text-gray-500">{league.country} - Season {league.season}</span>
                             </div>
                         </div>
-                        <FaArrowRight className="text-[10px] text-gray-600 transition-all group-hover:translate-x-1 group-hover:text-[#8b5cf6]" />
+                        <FaArrowRight className="shrink-0 text-[10px] text-gray-600 transition-all group-hover:translate-x-1 group-hover:text-[#8b5cf6]" />
                     </Link>
                 ))}
             </div>

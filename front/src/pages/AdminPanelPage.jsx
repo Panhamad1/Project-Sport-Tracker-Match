@@ -30,19 +30,17 @@ const initialForms = {
   },
   standings: {
     league: "39",
-    season: "2024",
   },
   teams: {
     league: "39",
-    season: "2024",
   },
   players: {
     teamApiId: "541",
-    season: "2024",
+    allSeasons: true,
   },
   player: {
     playerApiId: "",
-    season: "2024",
+    allSeasons: true,
   },
 };
 
@@ -168,13 +166,55 @@ const getResultItems = (result) => {
     return [];
   }
 
+  const getLabel = (item) => {
+    if(item.date){
+      return item.date;
+    }
+
+    if(item.match){
+      return item.match;
+    }
+
+    if(item.matchId){
+      return `Match ${item.matchId}`;
+    }
+
+    if(item.playerApiId && item.season){
+      return `Player ${item.playerApiId} - ${item.season}`;
+    }
+
+    if(item.teamApiId && item.season){
+      return `Team ${item.teamApiId} - ${item.season}`;
+    }
+
+    if(item.league && item.season){
+      return `League ${item.league} - ${item.season}`;
+    }
+
+    return item.league || item.teamApiId || item.playerApiId || "result";
+  };
+
+  const getCountLabel = (item) => {
+    if(item.date && Number.isInteger(item.count)){
+      return `${item.count} fixture${item.count === 1 ? "" : "s"} saved after filter`;
+    }
+
+    if(Number.isInteger(item.players_count)){
+      return `${item.players_count} player${item.players_count === 1 ? "" : "s"}, ${item.statistics_count || 0} stat row${item.statistics_count === 1 ? "" : "s"}`;
+    }
+
+    if(Number.isInteger(item.count)){
+      return `${item.count} row${item.count === 1 ? "" : "s"} saved`;
+    }
+
+    return null;
+  };
+
   return results.map((item) => ({
-    label: item.date || item.league || item.teamApiId || item.match || item.matchId || "result",
+    label: getLabel(item),
     status: item.status || (item.error_message ? "failed" : "success"),
     count: item.count,
-    countLabel: item.date && Number.isInteger(item.count)
-      ? `${item.count} fixture${item.count === 1 ? "" : "s"} saved after filter`
-      : null,
+    countLabel: getCountLabel(item),
     message: item.error_message || item.message || "",
   }));
 };
@@ -218,10 +258,9 @@ const AdminPanelPage = () => {
     {
       key: "standings",
       title: "Sync League + Standings",
-      description: "Save the league header and its standing table.",
+      description: "Save league headers and standing tables for 2022, 2023, and 2024.",
       fields: [
         { name: "league", label: "League API ID", type: "number" },
-        { name: "season", label: "Season", type: "number" },
       ],
       submitLabel: "Sync Standings",
       run: syncStandings,
@@ -229,10 +268,9 @@ const AdminPanelPage = () => {
     {
       key: "teams",
       title: "Sync Teams",
-      description: "Fetch teams for one league and season.",
+      description: "Fetch teams for this league across 2022, 2023, and 2024.",
       fields: [
         { name: "league", label: "League API ID", type: "number" },
-        { name: "season", label: "Season", type: "number" },
       ],
       submitLabel: "Sync Teams",
       run: syncTeams,
@@ -240,10 +278,9 @@ const AdminPanelPage = () => {
     {
       key: "players",
       title: "Sync Players",
-      description: "Fetch players by team and season. Stats from all returned leagues are saved for team detail pages.",
+      description: "Fetch players by team across 2022, 2023, and 2024.",
       fields: [
         { name: "teamApiId", label: "Team API ID", type: "number" },
-        { name: "season", label: "Season", type: "number" },
       ],
       submitLabel: "Sync Players",
       run: syncPlayers,
@@ -251,10 +288,9 @@ const AdminPanelPage = () => {
     {
       key: "player",
       title: "Sync Specific Player",
-      description: "Fetch one important player by player API ID and season when team pagination misses them.",
+      description: "Fetch one important player across 2022, 2023, and 2024 when team pagination misses them.",
       fields: [
         { name: "playerApiId", label: "Player API ID", type: "number" },
-        { name: "season", label: "Season", type: "number" },
       ],
       submitLabel: "Sync Player",
       run: syncPlayer,

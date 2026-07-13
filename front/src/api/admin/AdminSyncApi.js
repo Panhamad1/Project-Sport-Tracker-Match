@@ -35,9 +35,15 @@ const requestSync = async (request) => {
     }
 };
 
+const cleanParams = (params) => {
+    return Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== "" && value !== null && value !== undefined && value !== false)
+    );
+};
+
 export const syncFixtures = ({ from, to }) => {
     return requestSync(() => API.post("/fixtures", {}, {
-        params: { from, to },
+        params: cleanParams({ from, to }),
     }));
 };
 
@@ -47,25 +53,25 @@ export const syncFixture = ({ fixtureId }) => {
 
 export const syncTeams = ({ league, season }) => {
     return requestSync(() => API.post("/teams", {}, {
-        params: { league, season },
+        params: cleanParams({ league, season }),
     }));
 };
 
-export const syncPlayers = ({ teamApiId, season }) => {
+export const syncPlayers = ({ teamApiId, season, allSeasons }) => {
     return requestSync(() => API.post("/players", {}, {
-        params: { teamApiId, season },
+        params: cleanParams({ teamApiId, season, allSeasons }),
     }));
 };
 
-export const syncPlayer = ({ playerApiId, season }) => {
+export const syncPlayer = ({ playerApiId, season, allSeasons }) => {
     return requestSync(() => API.post(`/players/${playerApiId}`, {}, {
-        params: { season },
+        params: cleanParams({ season, allSeasons }),
     }));
 };
 
 export const syncStandings = ({ league, season }) => {
     return requestSync(() => API.post("/standings", {}, {
-        params: { league, season },
+        params: cleanParams({ league, season }),
     }));
 };
 

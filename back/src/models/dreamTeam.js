@@ -27,7 +27,6 @@ const DreamTeam = sequelize.define("DreamTeam",
         underscored: true,
         indexes: [
             {
-                unique: true,
                 fields: ["user_id"],
             },
         ],

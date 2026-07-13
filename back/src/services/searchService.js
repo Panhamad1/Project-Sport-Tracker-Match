@@ -1,6 +1,25 @@
 import { Op } from "sequelize";
-import { Fixture, League, Player, Team } from "../models/index.js";
+import { Fixture, League, Player, PlayerStatistic, Team } from "../models/index.js";
 import { getCambodiaDateTimeFields } from "../utils/cambodiaTime.js";
+
+const PLAYER_POSITION_FILTERS = {
+    gk: {
+        label: "GK",
+        values: ["Goalkeeper"],
+    },
+    def: {
+        label: "DEF",
+        values: ["Defender"],
+    },
+    mid: {
+        label: "MID",
+        values: ["Midfielder"],
+    },
+    fwd: {
+        label: "FWD",
+        values: ["Attacker"],
+    },
+};
 
 const formatTeamResult = (team) => {
     const teamData = typeof team.toJSON === "function" ? team.toJSON() : team;
@@ -27,17 +46,30 @@ const formatLeagueResult = (league) => {
     };
 };
 
-const formatPlayerResult = (player) => {
+const getPlayerDisplayName = (playerData) => {
+    const fullName = [playerData.firstname, playerData.lastname]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+    return fullName || playerData.name;
+};
+
+const formatPlayerResult = (player, position = null) => {
     const playerData = typeof player.toJSON === "function" ? player.toJSON() : player;
+    const displayName = getPlayerDisplayName(playerData);
 
     return {
         api_player_id: playerData.api_player_id,
         name: playerData.name,
+        display_name: displayName,
+        full_name: displayName,
         firstname: playerData.firstname,
         lastname: playerData.lastname,
         age: playerData.age,
         nationality: playerData.nationality,
         photo: playerData.photo,
+        position,
     };
 };
 
@@ -114,13 +146,70 @@ const findMatchingLeagues = async (keyword, limit = 10) => {
     });
 };
 
-const findMatchingPlayers = async (keyword) => {
-    return Player.findAll({
-        where: {
-            name: {
-                [Op.like]: `%${keyword}%`,
+const getPlayerPositionFilter = (position) => {
+    if (!position || position.toLowerCase() === "all") {
+        return null;
+    }
+
+    return PLAYER_POSITION_FILTERS[position.toLowerCase()] || null;
+};
+
+const findMatchingPlayers = async (keyword, position = "all") => {
+    const positionFilter = getPlayerPositionFilter(position);
+    let playerIdFilter = null;
+
+    if (positionFilter) {
+        const statistics = await PlayerStatistic.findAll({
+            where: {
+                position: {
+                    [Op.in]: positionFilter.values,
+                },
             },
-        },
+            attributes: ["player_id"],
+            group: ["player_id"],
+        });
+
+        playerIdFilter = statistics.map((statistic) => statistic.player_id);
+
+        if (playerIdFilter.length === 0) {
+            return [];
+        }
+    }
+
+    const searchFilter = {
+        [Op.or]: [
+            {
+                name: {
+                    [Op.like]: `%${keyword}%`,
+                },
+            },
+            {
+                firstname: {
+                    [Op.like]: `%${keyword}%`,
+                },
+            },
+            {
+                lastname: {
+                    [Op.like]: `%${keyword}%`,
+                },
+            },
+        ],
+    };
+    const where = playerIdFilter
+        ? {
+            [Op.and]: [
+                searchFilter,
+                {
+                    id: {
+                        [Op.in]: playerIdFilter,
+                    },
+                },
+            ],
+        }
+        : searchFilter;
+
+    return Player.findAll({
+        where,
         attributes: [
             "api_player_id",
             "name",
@@ -191,8 +280,9 @@ const findMatchingMatches = async ({ teamIds, leagueIds }) => {
     });
 };
 
-const searchTeamsAndPlayersService = async (search= "", type= "all") => {
+const searchTeamsAndPlayersService = async (search= "", type= "all", filters = {}) => {
     const keyword= search.trim();
+    const playerPositionFilter = getPlayerPositionFilter(filters.playerPosition);
 
     if (!keyword) {
         return {
@@ -230,7 +320,7 @@ const searchTeamsAndPlayersService = async (search= "", type= "all") => {
     }
 
     if (searchType === "all" || searchType === "players") {
-        players = await findMatchingPlayers(keyword);
+        players = await findMatchingPlayers(keyword, filters.playerPosition);
     }
 
     if (searchType === "all" || searchType === "matches") {
@@ -243,7 +333,7 @@ const searchTeamsAndPlayersService = async (search= "", type= "all") => {
     return {
         teams: teams.map(formatTeamResult),
         leagues: leagues.map(formatLeagueResult),
-        players: players.map(formatPlayerResult),
+        players: players.map((player) => formatPlayerResult(player, playerPositionFilter?.label || null)),
         matches: matches.map(formatMatchResult),
     };
 };

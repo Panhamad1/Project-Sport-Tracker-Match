@@ -11,6 +11,7 @@ import {
   FaSignOutAlt,
   FaThumbtack,
   FaUserCircle,
+  FaUsers,
 } from 'react-icons/fa';
 import { useAuth } from '../hooks/useAuth';
 import SearchDropdown from './SearchDropdown';
@@ -104,6 +105,10 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
                       <Link onClick={closeProfileMenu} to="/profile/pinned" className="flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-300 hover:text-white hover:bg-[#1a1a1a]">
                         <FaThumbtack className="text-[#8b5cf6]" />
                         Pinned Matches
+                      </Link>
+                      <Link onClick={closeProfileMenu} to="/dream-team" className="flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-300 hover:text-white hover:bg-[#1a1a1a]">
+                        <FaUsers className="text-[#8b5cf6]" />
+                        Dream Team
                       </Link>
                       {isAdmin && (
                         <Link onClick={closeProfileMenu} to="/admin" className="flex items-center gap-3 px-3 py-2 rounded text-sm text-[#a78bfa] hover:text-white hover:bg-[#8b5cf6]/20">
