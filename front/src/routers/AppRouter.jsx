@@ -51,6 +51,7 @@ function AppRouter() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/profile/favorites" element={<ProfilePage />} />
                 <Route path="/profile/pinned" element={<ProfilePage />} />
+                <Route path="/profile/notifications" element={<ProfilePage />} />
                 <Route path="/profile/predictions" element={<Navigate to="/prediction" replace />} />
                 <Route path="/profile/settings" element={<ProfilePage />} />
                 <Route path="/matches" element={<MatchesPage />} />

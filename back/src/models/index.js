@@ -17,6 +17,7 @@ import Prediction from "./prediction.js";
 import DreamTeam from "./dreamTeam.js";
 import FixtureOdd from "./fixtureOdd.js";
 import PredictionPick from "./predictionPick.js";
+import Notification from "./notification.js";
 League.hasMany(Fixture,{
     foreignKey: "league_id",
     as:"fixtures",
@@ -185,6 +186,33 @@ PredictionPick.belongsTo(FixtureOdd, {
     foreignKey: "fixture_odd_id",
     as: "odd",
 });
+User.hasMany(Notification, {
+    foreignKey: "user_id",
+    as: "notifications",
+    onDelete: "CASCADE",
+});
+Notification.belongsTo(User, {
+    foreignKey: "user_id",
+    as: "user",
+});
+Fixture.hasMany(Notification, {
+    foreignKey: "fixture_id",
+    as: "notifications",
+    onDelete: "CASCADE",
+});
+Notification.belongsTo(Fixture, {
+    foreignKey: "fixture_id",
+    as: "fixture",
+});
+PredictionPick.hasMany(Notification, {
+    foreignKey: "prediction_pick_id",
+    as: "notifications",
+    onDelete: "CASCADE",
+});
+Notification.belongsTo(PredictionPick, {
+    foreignKey: "prediction_pick_id",
+    as: "predictionPick",
+});
 User.hasMany(DreamTeam, {
     foreignKey: "user_id",
     as: "dreamTeams",
@@ -236,4 +264,4 @@ PlayerStatistic.belongsTo(League, {
 });
 
 
-export { sequelize, User, League, Team, Fixture, FixtureSyncLog, FavoriteTeam, PinnedMatch, Player, PlayerStatistic, MatchDetail, LeagueStanding, StreamLink, FeaturedFixture, Prediction, DreamTeam, FixtureOdd, PredictionPick };
+export { sequelize, User, League, Team, Fixture, FixtureSyncLog, FavoriteTeam, PinnedMatch, Player, PlayerStatistic, MatchDetail, LeagueStanding, StreamLink, FeaturedFixture, Prediction, DreamTeam, FixtureOdd, PredictionPick, Notification };

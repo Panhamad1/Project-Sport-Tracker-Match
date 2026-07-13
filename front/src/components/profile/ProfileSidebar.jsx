@@ -1,8 +1,8 @@
-import { Link, NavLink } from "react-router-dom";
-import { FaShieldAlt, FaUserCircle } from "react-icons/fa";
+import { NavLink } from "react-router-dom";
+import { FaUserCircle } from "react-icons/fa";
 import PanelCard from "../common/PanelCard";
 
-const ProfileSidebar = ({ user, loading, isAdmin, items }) => {
+const ProfileSidebar = ({ user, loading, items }) => {
   return (
     <PanelCard as="aside" className="p-4 h-fit">
       <div className="flex items-center gap-3 pb-4 border-b border-[#2a2a2a]">
@@ -34,15 +34,6 @@ const ProfileSidebar = ({ user, loading, isAdmin, items }) => {
           </NavLink>
         ))}
 
-        {isAdmin && (
-          <Link
-            to="/admin"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#a78bfa] hover:text-white hover:bg-[#8b5cf6]/20 transition-all"
-          >
-            <FaShieldAlt />
-            <span>Admin Panel</span>
-          </Link>
-        )}
       </nav>
     </PanelCard>
   );

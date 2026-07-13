@@ -19,6 +19,7 @@ import predictionRoutes from "./routes/predictionRoutes.js";
 import adminPredictionRoutes from "./routes/adminPredictionRoutes.js";
 import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import dreamTeamRoutes from "./routes/dreamTeamRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -44,6 +45,7 @@ app.use("/api/pinned/matches", pinnedMatchRoutes);
 app.use("/api/predictions", predictionRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/dream-team", dreamTeamRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/football/search",searchRoutes);
 app.use("/api/admin/sync",adminSyncRoutes);
 app.use("/api/admin/stream-links", adminStreamLinkRoutes);

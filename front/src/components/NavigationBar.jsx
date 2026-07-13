@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaBars,
@@ -20,6 +20,7 @@ import {
   FaUsers,
 } from 'react-icons/fa';
 import { useAuth } from '../hooks/useAuth';
+import { getNotifications, markAllNotificationsRead } from '../api/football/NotificationApi';
 import SearchDropdown from './SearchDropdown';
 
 const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
@@ -28,6 +29,10 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
   const { user, loading, logout } = useAuth();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationLoading, setNotificationLoading] = useState(false);
 
   const isAuthenticated = Boolean(user);
   const isAdmin = user?.role === 'admin';
@@ -48,9 +53,67 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
     setIsProfileMenuOpen(false);
   };
 
+  const loadNotifications = useCallback(async () => {
+    if(!isAuthenticated){
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+
+    setNotificationLoading(true);
+    const result = await getNotifications();
+
+    if(result.ok){
+      setNotifications(result.data?.notifications || []);
+      setUnreadCount(result.data?.unread_count || 0);
+    }
+
+    setNotificationLoading(false);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      loadNotifications();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    window.addEventListener('notifications-updated', loadNotifications);
+
+    return () => {
+      window.removeEventListener('notifications-updated', loadNotifications);
+    };
+  }, [loadNotifications]);
+
+  const handleToggleNotifications = async () => {
+    const nextOpen = !isNotificationOpen;
+    setIsNotificationOpen(nextOpen);
+    setIsProfileMenuOpen(false);
+
+    if(nextOpen){
+      await loadNotifications();
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    const result = await markAllNotificationsRead();
+
+    if(result.ok){
+      setUnreadCount(0);
+      setNotifications((current) => current.map((notification) => ({
+        ...notification,
+        is_read: true,
+      })));
+      window.dispatchEvent(new Event('notifications-updated'));
+    }
+  };
+
   const handleLogout = () => {
     logout();
     closeProfileMenu();
+    setIsNotificationOpen(false);
     navigate('/login');
   };
 
@@ -88,10 +151,76 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
               <FaSearch className="text-lg" />
             </button>
 
-            <button className="relative hidden p-2 text-gray-400 transition-all hover:bg-[#1a1a1a] hover:text-white sm:inline-flex sm:rounded-lg">
-              <FaBell className="text-lg" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            {isAuthenticated && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleToggleNotifications}
+                  className="relative inline-flex rounded-lg p-2 text-gray-400 transition-all hover:bg-[#1a1a1a] hover:text-white"
+                >
+                  <FaBell className="text-lg" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {isNotificationOpen && (
+                  <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] shadow-xl">
+                    <div className="flex items-center justify-between gap-3 border-b border-[#2a2a2a] px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">Notifications</p>
+                        <p className="text-xs text-gray-500">{unreadCount} unread</p>
+                      </div>
+                      {unreadCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleMarkAllRead}
+                          className="text-xs font-medium text-[#a78bfa] hover:text-white"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto p-2">
+                      {notificationLoading ? (
+                        <p className="px-3 py-4 text-sm text-gray-400">Loading notifications...</p>
+                      ) : notifications.length === 0 ? (
+                        <p className="rounded-lg border border-dashed border-[#2a2a2a] px-3 py-4 text-sm text-gray-400">
+                          No notifications yet.
+                        </p>
+                      ) : (
+                        notifications.slice(0, 6).map((notification) => (
+                          <Link
+                            key={notification.notification_id}
+                            to={notification.match?.api_fixture_id ? `/matches/${notification.match.api_fixture_id}` : '/profile/notifications'}
+                            onClick={() => setIsNotificationOpen(false)}
+                            className={`mb-2 block rounded-lg border p-3 transition-all hover:border-[#8b5cf6]/50 ${
+                              notification.is_read
+                                ? 'border-[#2a2a2a] bg-[#111111]'
+                                : 'border-[#8b5cf6]/30 bg-[#8b5cf6]/10'
+                            }`}
+                          >
+                            <p className="text-sm font-semibold text-white">{notification.title}</p>
+                            <p className="mt-1 line-clamp-2 text-xs text-gray-400">{notification.message}</p>
+                          </Link>
+                        ))
+                      )}
+                    </div>
+
+                    <Link
+                      to="/profile/notifications"
+                      onClick={() => setIsNotificationOpen(false)}
+                      className="block border-t border-[#2a2a2a] px-4 py-3 text-center text-sm font-medium text-[#a78bfa] hover:text-white"
+                    >
+                      View all notifications
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {isAuthenticated ? (
               <div className="relative">
@@ -124,6 +253,10 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
                       <Link onClick={closeProfileMenu} to="/profile/pinned" className="flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-300 hover:text-white hover:bg-[#1a1a1a]">
                         <FaThumbtack className="text-[#8b5cf6]" />
                         Pinned Matches
+                      </Link>
+                      <Link onClick={closeProfileMenu} to="/profile/notifications" className="flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-300 hover:text-white hover:bg-[#1a1a1a]">
+                        <FaBell className="text-[#8b5cf6]" />
+                        Notifications
                       </Link>
                       <Link onClick={closeProfileMenu} to="/dream-team" className="flex items-center gap-3 px-3 py-2 rounded text-sm text-gray-300 hover:text-white hover:bg-[#1a1a1a]">
                         <FaUsers className="text-[#8b5cf6]" />
