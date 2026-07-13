@@ -152,15 +152,17 @@ const TopMatchCard = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-6">
+                <div className="grid grid-cols-1 items-center gap-5 px-4 py-5 text-center sm:grid-cols-[1fr_auto_1fr] sm:px-5 sm:py-6 sm:text-left">
                     <div className="min-w-0">
-                        <TeamMark team={match.homeTeam} />
-                        <h2 className="mt-3 truncate text-xl font-bold md:text-2xl">{match.homeTeam?.name || 'Home Team'}</h2>
+                        <div className="flex justify-center sm:block">
+                            <TeamMark team={match.homeTeam} />
+                        </div>
+                        <h2 className="mt-3 truncate text-lg font-bold sm:text-xl md:text-2xl">{match.homeTeam?.name || 'Home Team'}</h2>
                         <p className="mt-1 text-xs text-gray-500">Home</p>
                     </div>
 
-                    <div className="min-w-[112px] rounded-lg bg-black/40 px-5 py-3 text-center">
-                        <p className="text-3xl font-black leading-none text-white">
+                    <div className="mx-auto min-w-[112px] rounded-lg bg-black/40 px-5 py-3 text-center">
+                        <p className="text-2xl font-black leading-none text-white sm:text-3xl">
                             {getScoreText(match)}
                         </p>
                         <p className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-400">
@@ -169,11 +171,11 @@ const TopMatchCard = () => {
                         </p>
                     </div>
 
-                    <div className="min-w-0 text-right">
-                        <div className="flex justify-end">
+                    <div className="min-w-0 text-center sm:text-right">
+                        <div className="flex justify-center sm:justify-end">
                             <TeamMark team={match.awayTeam} />
                         </div>
-                        <h2 className="mt-3 truncate text-xl font-bold md:text-2xl">{match.awayTeam?.name || 'Away Team'}</h2>
+                        <h2 className="mt-3 truncate text-lg font-bold sm:text-xl md:text-2xl">{match.awayTeam?.name || 'Away Team'}</h2>
                         <p className="mt-1 text-xs text-gray-500">Away</p>
                     </div>
                 </div>

@@ -91,7 +91,7 @@ const MatchFeedCard = ({
     const status = getFixtureStatus(fixture);
 
     return (
-        <div className="group min-h-[178px] w-[280px] shrink-0 rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-3 transition-all hover:border-[#8b5cf6]/40 hover:bg-[#202020] sm:w-[320px]">
+        <div className="group min-h-[178px] w-[82vw] max-w-[300px] shrink-0 rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-3 transition-all hover:border-[#8b5cf6]/40 hover:bg-[#202020] sm:w-[320px] sm:max-w-none">
             <div className="mb-2 flex items-start justify-between gap-2">
                 <div className="min-w-0">
                     <p className="truncate text-xs text-gray-400">{fixture.league?.name || 'Saved League'}</p>
@@ -151,8 +151,8 @@ const MatchFeedCard = ({
                     </div>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between border-t border-[#2a2a2a] pt-2 text-[11px] text-gray-400">
-                    <span>
+                <div className="mt-2 flex items-center justify-between gap-2 border-t border-[#2a2a2a] pt-2 text-[11px] text-gray-400">
+                    <span className="min-w-0 truncate">
                         {status === 'finished'
                             ? `Total goals: ${Number(fixture.home_goals || 0) + Number(fixture.away_goals || 0)}`
                             : `${fixture.match_date_local || ''} ${fixture.match_time_local || ''}`.trim() || 'Kickoff TBD'}

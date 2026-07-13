@@ -109,7 +109,7 @@ const TeamBadge = ({ team, align = "left" }) => {
   const isRight = align === "right";
 
   return (
-    <div className={`flex min-w-0 items-center gap-2 ${isRight ? "justify-end text-right" : ""}`}>
+    <div className={`flex min-w-0 items-center gap-2 ${isRight ? "sm:justify-end sm:text-right" : ""}`}>
       {!isRight && team?.logo && (
         <img src={team.logo} alt="" className="h-7 w-7 rounded-full object-contain" />
       )}
@@ -152,9 +152,9 @@ const PredictionCard = ({ prediction, type }) => {
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div className="mt-4 grid grid-cols-1 items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
         <TeamBadge team={match?.homeTeam} />
-        <div className="rounded-lg bg-black/35 px-3 py-2 text-center text-sm font-bold text-white">
+        <div className="mx-auto rounded-lg bg-black/35 px-3 py-2 text-center text-sm font-bold text-white sm:mx-0">
           {getMatchScore(match)}
         </div>
         <TeamBadge team={match?.awayTeam} align="right" />

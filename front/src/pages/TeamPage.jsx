@@ -455,10 +455,10 @@ const CompactMatchCard = ({ fixture }) => {
         <span className="truncate">{fixture.league?.name || "Saved match"}</span>
         <span className="shrink-0">{fixture.match_date_local || ""}</span>
       </div>
-      <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div className="mt-3 grid grid-cols-1 items-center gap-2 text-center sm:grid-cols-[1fr_auto_1fr] sm:text-left">
         <p className="truncate text-sm font-semibold text-white">{fixture.homeTeam?.name || "Home"}</p>
-        <p className="rounded bg-black/35 px-3 py-1 text-sm font-bold text-white">{getScoreText(fixture)}</p>
-        <p className="truncate text-right text-sm font-semibold text-white">{fixture.awayTeam?.name || "Away"}</p>
+        <p className="mx-auto rounded bg-black/35 px-3 py-1 text-sm font-bold text-white">{getScoreText(fixture)}</p>
+        <p className="truncate text-sm font-semibold text-white sm:text-right">{fixture.awayTeam?.name || "Away"}</p>
       </div>
     </Link>
   );

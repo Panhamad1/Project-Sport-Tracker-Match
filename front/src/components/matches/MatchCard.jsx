@@ -18,7 +18,7 @@ const TeamBlock = ({ team, align = "left" }) => {
   const isRight = align === "right";
 
   return (
-    <div className={`flex items-center gap-3 min-w-0 ${isRight ? "justify-end text-right" : ""}`}>
+    <div className={`flex min-w-0 items-center gap-3 ${isRight ? "sm:justify-end sm:text-right" : ""}`}>
       {!isRight && team?.logo && (
         <img src={team.logo} alt="" className="h-8 w-8 rounded-full object-contain" />
       )}
@@ -48,9 +48,9 @@ const MatchCard = ({ fixture }) => {
         <MatchStatusBadge statusShort={fixture.status_short} elapsed={fixture.elapsed} />
       </div>
 
-      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div className="mt-4 grid grid-cols-1 items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
         <TeamBlock team={fixture.homeTeam} />
-        <div className="rounded-lg bg-black/35 px-4 py-2 text-center text-base font-bold text-white">
+        <div className="mx-auto rounded-lg bg-black/35 px-4 py-2 text-center text-base font-bold text-white sm:mx-0">
           {getScoreText(fixture)}
         </div>
         <TeamBlock team={fixture.awayTeam} align="right" />

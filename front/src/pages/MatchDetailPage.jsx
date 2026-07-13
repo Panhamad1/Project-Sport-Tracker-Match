@@ -167,12 +167,12 @@ const H2HTab = ({ h2h }) => {
             <span>{match.league?.name || "Unknown League"}</span>
             <span>{match.fixture?.date ? new Date(match.fixture.date).toLocaleDateString() : "Unknown Date"}</span>
           </div>
-          <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="mt-3 grid grid-cols-1 items-center gap-2 text-center sm:grid-cols-[1fr_auto_1fr] sm:text-left">
             <p className="truncate text-sm text-white">{match.teams?.home?.name || "Home"}</p>
-            <p className="rounded bg-black/35 px-3 py-1 text-sm font-semibold">
+            <p className="mx-auto rounded bg-black/35 px-3 py-1 text-sm font-semibold">
               {match.goals?.home ?? "-"} - {match.goals?.away ?? "-"}
             </p>
-            <p className="truncate text-right text-sm text-white">{match.teams?.away?.name || "Away"}</p>
+            <p className="truncate text-sm text-white sm:text-right">{match.teams?.away?.name || "Away"}</p>
           </div>
         </div>
       ))}

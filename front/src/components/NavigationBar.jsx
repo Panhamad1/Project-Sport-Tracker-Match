@@ -1,15 +1,21 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaBars,
   FaBell,
+  FaChartLine,
   FaChevronDown,
+  FaCrown,
   FaFutbol,
   FaHeart,
+  FaHome,
+  FaNewspaper,
   FaSearch,
   FaShieldAlt,
   FaSignOutAlt,
   FaThumbtack,
+  FaTrophy,
+  FaTv,
   FaUserCircle,
   FaUsers,
 } from 'react-icons/fa';
@@ -18,12 +24,25 @@ import SearchDropdown from './SearchDropdown';
 
 const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading, logout } = useAuth();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   const isAuthenticated = Boolean(user);
   const isAdmin = user?.role === 'admin';
+  const mobileLinks = [
+    { path: '/home', label: 'Home', icon: <FaHome /> },
+    { path: '/leagues', label: 'Leagues', icon: <FaCrown /> },
+    { path: '/matches', label: 'Matches', icon: <FaTv /> },
+    { path: '/leaderboard', label: 'Ranks', icon: <FaTrophy /> },
+    { path: '/prediction', label: 'Picks', icon: <FaChartLine /> },
+    { path: '/dream-team', label: 'Dream Team', icon: <FaUsers /> },
+    { path: '/news', label: 'News', icon: <FaNewspaper /> },
+    ...(isAdmin ? [{ path: '/admin', label: 'Admin', icon: <FaShieldAlt /> }] : []),
+  ];
+
+  const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   const closeProfileMenu = () => {
     setIsProfileMenuOpen(false);
@@ -37,11 +56,11 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
 
   return (
     <nav className="border-b border-[#2a2a2a] bg-[#050505] sticky top-0 z-50">
-      <div className="max-w-full px-4 md:px-12 py-4">
-        <div className="flex items-center justify-between gap-4">
+      <div className="max-w-full px-3 py-3 sm:px-4 md:px-12 md:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-3 shrink-0">
             <button
-              className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-all text-gray-400 hover:text-white"
+              className="hidden p-2 text-gray-400 transition-all hover:bg-[#1a1a1a] hover:text-white md:inline-flex md:rounded-lg"
               onClick={onToggleSidebar}
               title={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
             >
@@ -50,7 +69,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
 
             <Link to="/home" className="flex items-center gap-2 group">
               <FaFutbol className="text-2xl text-[#8b5cf6] group-hover:scale-110 transition-transform" />
-              <h1 className="text-white text-xl font-bold hidden sm:block">
+              <h1 className="text-white text-lg font-bold sm:text-xl">
                 Foot<span className="text-[#8b5cf6]">Hub</span>
               </h1>
             </Link>
@@ -60,7 +79,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
             <SearchDropdown />
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 md:gap-4">
             <button
               type="button"
               onClick={() => setIsMobileSearchOpen((current) => !current)}
@@ -69,7 +88,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
               <FaSearch className="text-lg" />
             </button>
 
-            <button className="relative p-2 text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-all">
+            <button className="relative hidden p-2 text-gray-400 transition-all hover:bg-[#1a1a1a] hover:text-white sm:inline-flex sm:rounded-lg">
               <FaBell className="text-lg" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
@@ -79,7 +98,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
                 <button
                   type="button"
                   onClick={() => setIsProfileMenuOpen((current) => !current)}
-                  className="flex items-center gap-2 bg-[#1a1a1a] px-3 py-2 rounded-lg hover:bg-[#2a2a2a] transition-all"
+                  className="flex items-center gap-2 rounded-lg bg-[#1a1a1a] px-2.5 py-2 transition-all hover:bg-[#2a2a2a] sm:px-3"
                 >
                   <FaUserCircle className="text-2xl text-[#8b5cf6]" />
                   <span className="text-white text-sm hidden lg:inline">{user.username || 'Profile'}</span>
@@ -87,7 +106,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
                 </button>
 
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-[#0d0d0d] border border-[#2a2a2a] rounded-lg shadow-xl overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] shadow-xl">
                     <div className="px-4 py-3 border-b border-[#2a2a2a]">
                       <p className="text-white text-sm font-semibold truncate">{user.username}</p>
                       <p className="text-gray-500 text-xs truncate">{user.email}</p>
@@ -129,7 +148,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
                 )}
               </div>
             ) : (
-              <Link to="/login" className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-4 py-2 rounded-lg transition-all text-sm font-medium">
+              <Link to="/login" className="rounded-lg bg-[#8b5cf6] px-3 py-2 text-sm font-medium text-white transition-all hover:bg-[#7c3aed] sm:px-4">
                 {loading ? 'Loading...' : 'Sign In'}
               </Link>
             )}
@@ -141,6 +160,23 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
             <SearchDropdown />
           </div>
         )}
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:hidden">
+          {mobileLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-all ${
+                isActive(link.path)
+                  ? 'border-[#8b5cf6]/50 bg-[#8b5cf6]/20 text-white'
+                  : 'border-[#2a2a2a] bg-[#101010] text-gray-400'
+              }`}
+            >
+              <span className="text-sm">{link.icon}</span>
+              {link.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );
