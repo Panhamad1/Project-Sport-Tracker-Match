@@ -84,30 +84,92 @@ const formatStanding = (standing) => {
     };
 };
 
-const formatPlayerStatistic = (statistic) => {
-    const statisticData = typeof statistic.toJSON === "function" ? statistic.toJSON() : statistic;
-    const player = statisticData.player || {};
+const sumStatisticField = (statistics, field) => {
+    const values = statistics
+        .map((statistic) => statistic[field])
+        .filter((value) => value !== null && value !== undefined);
 
-    return {
-        id: player.id,
-        api_player_id: player.api_player_id,
-        name: player.name,
-        age: player.age,
-        nationality: player.nationality,
-        photo: player.photo,
-        position: statisticData.position,
-        rating: statisticData.rating,
-        appearances: statisticData.appearances,
-        lineups: statisticData.lineups,
-        minutes: statisticData.minutes,
-        goals: statisticData.goals,
-        assists: statisticData.assists,
-        yellow_cards: statisticData.yellow_cards,
-        red_cards: statisticData.red_cards,
-        season: statisticData.season,
-        league: formatPublicLeague(statisticData.league),
-        last_updated: statisticData.last_updated,
-    };
+    if(values.length === 0){
+        return null;
+    }
+
+    return values.reduce((total, value) => total + Number(value || 0), 0);
+};
+
+const getAvailablePlayerSeasons = async (teamId) => {
+    const seasonRows = await PlayerStatistic.findAll({
+        where: {
+            team_id: teamId,
+        },
+        attributes: ["season"],
+        group: ["season"],
+        order: [["season", "DESC"]],
+    });
+
+    return seasonRows
+        .map((row) => Number(row.get("season")))
+        .filter((season) => Number.isInteger(season));
+};
+
+const mergePlayerStatisticsByPlayer = (statistics) => {
+    const groupedStatistics = new Map();
+
+    for(const statistic of statistics){
+        const statisticData = typeof statistic.toJSON === "function" ? statistic.toJSON() : statistic;
+        const player = statisticData.player || {};
+        const key = player.api_player_id || player.id;
+
+        if(!key){
+            continue;
+        }
+
+        if(!groupedStatistics.has(key)){
+            groupedStatistics.set(key, []);
+        }
+
+        groupedStatistics.get(key).push(statisticData);
+    }
+
+    return Array.from(groupedStatistics.values())
+        .map((playerStatistics) => {
+            const sortedStatistics = [...playerStatistics].sort((first, second) => {
+                return Number(second.appearances || 0) - Number(first.appearances || 0)
+                    || Number(second.minutes || 0) - Number(first.minutes || 0);
+            });
+            const mainStatistic = sortedStatistics[0];
+            const player = mainStatistic.player || {};
+            const competitions = sortedStatistics
+                .map((statistic) => formatPublicLeague(statistic.league))
+                .filter(Boolean);
+
+            return {
+                id: player.id,
+                api_player_id: player.api_player_id,
+                name: player.name,
+                age: player.age,
+                nationality: player.nationality,
+                photo: player.photo,
+                position: mainStatistic.position,
+                rating: mainStatistic.rating,
+                appearances: sumStatisticField(playerStatistics, "appearances"),
+                lineups: sumStatisticField(playerStatistics, "lineups"),
+                minutes: sumStatisticField(playerStatistics, "minutes"),
+                goals: sumStatisticField(playerStatistics, "goals"),
+                assists: sumStatisticField(playerStatistics, "assists"),
+                yellow_cards: sumStatisticField(playerStatistics, "yellow_cards"),
+                red_cards: sumStatisticField(playerStatistics, "red_cards"),
+                season: mainStatistic.season,
+                league: competitions[0] || null,
+                competitions,
+                competitions_count: competitions.length,
+                last_updated: mainStatistic.last_updated,
+            };
+        })
+        .sort((first, second) => {
+            return Number(second.appearances || 0) - Number(first.appearances || 0)
+                || Number(second.minutes || 0) - Number(first.minutes || 0)
+                || String(first.name || "").localeCompare(String(second.name || ""));
+        });
 };
 
 const getTeamFixtures = async ({ teamId, direction }) => {
@@ -163,7 +225,7 @@ const getTeamFixtures = async ({ teamId, direction }) => {
     return fixtures.map(formatPublicFixture);
 };
 
-const getTeamByApiIdFromDatabaseOnly = async (apiTeamId) => {
+const getTeamByApiIdFromDatabaseOnly = async (apiTeamId, { playerSeason = null } = {}) => {
     const team = await Team.findOne({
         where: {
             api_team_id: apiTeamId,
@@ -176,6 +238,16 @@ const getTeamByApiIdFromDatabaseOnly = async (apiTeamId) => {
             team: null,
             apiRequestUsed: false,
         };
+    }
+
+    const playerSeasons = await getAvailablePlayerSeasons(team.id);
+    const selectedPlayerSeason = playerSeason || playerSeasons[0] || null;
+    const playerStatisticWhere = {
+        team_id: team.id,
+    };
+
+    if(selectedPlayerSeason){
+        playerStatisticWhere.season = selectedPlayerSeason;
     }
 
     const [standings, playerStatistics, recentMatches, upcomingMatches] = await Promise.all([
@@ -193,9 +265,7 @@ const getTeamByApiIdFromDatabaseOnly = async (apiTeamId) => {
             limit: 12,
         }),
         PlayerStatistic.findAll({
-            where: {
-                team_id: team.id,
-            },
+            where: playerStatisticWhere,
             include: [
                 {
                     model: Player,
@@ -207,7 +277,7 @@ const getTeamByApiIdFromDatabaseOnly = async (apiTeamId) => {
                 },
             ],
             order: [["season", "DESC"], ["appearances", "DESC"], ["minutes", "DESC"]],
-            limit: 40,
+            limit: 120,
         }),
         getTeamFixtures({
             teamId: team.id,
@@ -223,7 +293,9 @@ const getTeamByApiIdFromDatabaseOnly = async (apiTeamId) => {
         source: "database_only",
         team: formatPublicTeam(team),
         standings: standings.map(formatStanding),
-        players: playerStatistics.map(formatPlayerStatistic),
+        players: mergePlayerStatisticsByPlayer(playerStatistics),
+        player_seasons: playerSeasons,
+        selected_player_season: selectedPlayerSeason,
         recent_matches: recentMatches,
         upcoming_matches: upcomingMatches,
         apiRequestUsed: false,

@@ -21,6 +21,7 @@ const tabs = [
   { key: "statistics", label: "Statistics" },
   { key: "clubs", label: "Clubs" },
 ];
+const statisticSeasonFallbackOptions = ["2024", "2023", "2022"];
 
 const hasValue = (value) => value !== null && value !== undefined && value !== "";
 
@@ -151,7 +152,7 @@ const InfoItem = ({ icon, label, value }) => {
   );
 };
 
-const OverviewTab = ({ facts, primaryStatistic, summary }) => {
+const OverviewTab = ({ facts, primaryStatistic, selectedSeason, summary }) => {
   return (
     <div className="space-y-5">
       {facts.length > 0 && (
@@ -166,7 +167,7 @@ const OverviewTab = ({ facts, primaryStatistic, summary }) => {
         <PanelCard className="p-5">
           <h2 className="flex items-center gap-2 font-semibold text-white">
             <FaRunning className="text-[#8b5cf6]" />
-            Career Summary
+            Season {selectedSeason} Summary
           </h2>
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
             <SummaryMini label="Apps" value={summary.appearances} />
@@ -181,7 +182,7 @@ const OverviewTab = ({ facts, primaryStatistic, summary }) => {
         <PanelCard className="p-5">
           <h2 className="flex items-center gap-2 font-semibold text-white">
             <FaTrophy className="text-[#8b5cf6]" />
-            Latest Synced Season
+            Selected Season
           </h2>
           {!primaryStatistic ? (
             <div className="mt-4">
@@ -347,26 +348,36 @@ const PlayerPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [player, setPlayer] = useState(null);
   const [statistics, setStatistics] = useState([]);
+  const [statisticSeasons, setStatisticSeasons] = useState([]);
+  const [selectedStatisticSeason, setSelectedStatisticSeason] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
   const loadPlayer = useCallback(async () => {
     setLoading(true);
 
-    const result = await getPlayerById(playerApiId);
+    const result = await getPlayerById(playerApiId, { season: selectedStatisticSeason || undefined });
 
     if(result.ok){
+      const nextStatisticSeasons = (result.data?.statistic_seasons || []).map(String);
+      const nextSelectedSeason = result.data?.selected_statistic_season ? String(result.data.selected_statistic_season) : "";
+
       setPlayer(result.data?.player || null);
       setStatistics(result.data?.statistics || []);
+      setStatisticSeasons(nextStatisticSeasons);
+      if(!selectedStatisticSeason && nextSelectedSeason){
+        setSelectedStatisticSeason(nextSelectedSeason);
+      }
       setMessage(result.data?.message || "Player loaded successfully");
     }else{
       setPlayer(null);
       setStatistics([]);
+      setStatisticSeasons([]);
       setMessage(result.data?.message || result.data?.error || "Failed to load player");
     }
 
     setLoading(false);
-  }, [playerApiId]);
+  }, [playerApiId, selectedStatisticSeason]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -379,6 +390,12 @@ const PlayerPage = () => {
   const primaryStatistic = useMemo(() => getPrimaryStatistic(statistics), [statistics]);
   const summary = useMemo(() => buildCareerSummary(statistics), [statistics]);
   const clubRows = useMemo(() => buildClubRows(statistics), [statistics]);
+  const statisticSeasonOptions = useMemo(() => {
+    const savedSeasons = statisticSeasons.length > 0 ? statisticSeasons : statisticSeasonFallbackOptions;
+
+    return Array.from(new Set([selectedStatisticSeason, ...savedSeasons].filter(Boolean).map(String)));
+  }, [selectedStatisticSeason, statisticSeasons]);
+  const selectedDisplaySeason = selectedStatisticSeason || statisticSeasonOptions[0] || "2024";
   const facts = [
     player?.nationality ? { key: "nationality", icon: <FaIdBadge />, label: "Nationality", value: player.nationality } : null,
     player?.age ? { key: "age", icon: <FaCalendarAlt />, label: "Age", value: player.age } : null,
@@ -399,6 +416,7 @@ const PlayerPage = () => {
         <OverviewTab
           facts={facts}
           primaryStatistic={primaryStatistic}
+          selectedSeason={selectedDisplaySeason}
           summary={summary}
         />
       ),
@@ -407,7 +425,7 @@ const PlayerPage = () => {
     };
 
     return renderers[activeTab] || renderers.overview;
-  }, [activeTab, clubRows, facts, primaryStatistic, statistics, summary]);
+  }, [activeTab, clubRows, facts, primaryStatistic, selectedDisplaySeason, statistics, summary]);
 
   if(loading){
     return (
@@ -457,15 +475,29 @@ const PlayerPage = () => {
                 Injured
               </span>
             )}
+            <label className="flex items-center gap-2 text-xs text-gray-400">
+              Season
+              <select
+                value={selectedDisplaySeason}
+                onChange={(event) => setSelectedStatisticSeason(event.target.value)}
+                className="rounded-lg border border-[#2a2a2a] bg-[#111111] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#8b5cf6]"
+              >
+                {statisticSeasonOptions.map((season) => (
+                  <option key={season} value={season}>
+                    {season}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         </div>
       </PanelCard>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Appearances" value={summary.appearances} icon={<FaRunning />} />
-        <SummaryCard label="Goals" value={summary.goals} icon={<FaFutbol />} />
-        <SummaryCard label="Assists" value={summary.assists} icon={<FaStar />} />
-        <SummaryCard label="Teams Saved" value={clubRows.length} icon={<FaShieldAlt />} />
+        <SummaryCard label={`Apps ${selectedDisplaySeason}`} value={summary.appearances} icon={<FaRunning />} />
+        <SummaryCard label={`Goals ${selectedDisplaySeason}`} value={summary.goals} icon={<FaFutbol />} />
+        <SummaryCard label={`Assists ${selectedDisplaySeason}`} value={summary.assists} icon={<FaStar />} />
+        <SummaryCard label={`Teams ${selectedDisplaySeason}`} value={clubRows.length} icon={<FaShieldAlt />} />
       </div>
 
       <PanelCard className="p-4">

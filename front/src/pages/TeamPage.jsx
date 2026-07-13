@@ -33,6 +33,7 @@ const tabs = [
   { key: "squad", label: "Squad" },
   { key: "records", label: "Records" },
 ];
+const squadSeasonFallbackOptions = ["2024", "2023", "2022"];
 
 const formatNumber = (value) => {
   if(value === null || value === undefined){
@@ -142,6 +143,22 @@ const buildMatchRecord = (formEntries) => {
 };
 
 const getPlayerStatNumber = (player, field) => Number(player?.[field] || 0);
+
+const getCompetitionLabel = (player) => {
+  if(Number(player.competitions_count || 0) > 1){
+    return `${player.league?.name || "Multiple competitions"} +${Number(player.competitions_count) - 1}`;
+  }
+
+  return player.league?.name || `Season ${player.season}`;
+};
+
+const getCompetitionTitle = (player) => {
+  if(!Array.isArray(player.competitions) || player.competitions.length === 0){
+    return "";
+  }
+
+  return player.competitions.map((competition) => competition.name).filter(Boolean).join(", ");
+};
 
 const getTopPlayerByField = (players, field) => {
   return players.reduce((leader, player) => {
@@ -528,7 +545,9 @@ const PlayerTable = ({ players }) => {
                 </div>
               </td>
               <td className="px-4 py-4 text-gray-300">{player.position || "POS"}</td>
-              <td className="px-4 py-4 text-gray-300">{player.league?.name || `Season ${player.season}`}</td>
+              <td className="px-4 py-4 text-gray-300" title={getCompetitionTitle(player)}>
+                {getCompetitionLabel(player)}
+              </td>
               <td className="px-4 py-4 text-right text-gray-300">{formatNumber(player.appearances)}</td>
               <td className="px-4 py-4 text-right text-gray-300">{formatNumber(player.minutes)}</td>
               <td className="px-4 py-4 text-right text-gray-300">{formatNumber(player.goals)}</td>
@@ -580,7 +599,7 @@ const MatchesTab = ({ recentMatches, upcomingMatches }) => {
   );
 };
 
-const SquadTab = ({ players }) => {
+const SquadTab = ({ onSeasonChange, players, seasonOptions, selectedSeason }) => {
   return (
     <PanelCard className="overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2a2a2a] p-5">
@@ -593,9 +612,25 @@ const SquadTab = ({ players }) => {
             Player data comes from synced team statistics.
           </p>
         </div>
-        <span className="rounded-full bg-[#8b5cf6]/15 px-3 py-1 text-xs text-[#a78bfa]">
-          {players.length} players
-        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-gray-400">
+            Season
+            <select
+              value={selectedSeason}
+              onChange={(event) => onSeasonChange(event.target.value)}
+              className="rounded-lg border border-[#2a2a2a] bg-[#111111] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#8b5cf6]"
+            >
+              {seasonOptions.map((season) => (
+                <option key={season} value={season}>
+                  {season}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="rounded-full bg-[#8b5cf6]/15 px-3 py-1 text-xs text-[#a78bfa]">
+            {players.length} players
+          </span>
+        </div>
       </div>
       <div className="p-5">
         <PlayerTable players={players} />
@@ -637,6 +672,8 @@ const TeamPage = () => {
   const [team, setTeam] = useState(null);
   const [standings, setStandings] = useState([]);
   const [players, setPlayers] = useState([]);
+  const [squadSeasons, setSquadSeasons] = useState([]);
+  const [selectedSquadSeason, setSelectedSquadSeason] = useState("2024");
   const [recentMatches, setRecentMatches] = useState([]);
   const [upcomingMatches, setUpcomingMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -662,6 +699,11 @@ const TeamPage = () => {
   const totalGoals = useMemo(() => {
     return players.reduce((total, player) => total + Number(player.goals || 0), 0);
   }, [players]);
+  const squadSeasonOptions = useMemo(() => {
+    const savedSeasons = squadSeasons.length > 0 ? squadSeasons : squadSeasonFallbackOptions;
+
+    return Array.from(new Set([selectedSquadSeason, ...savedSeasons].filter(Boolean).map(String)));
+  }, [selectedSquadSeason, squadSeasons]);
   const teamFormEntries = useMemo(() => {
     return buildTeamForm(recentMatches, team?.api_team_id);
   }, [recentMatches, team]);
@@ -688,7 +730,14 @@ const TeamPage = () => {
           upcomingMatches={upcomingMatches}
         />
       ),
-      squad: <SquadTab players={players} />,
+      squad: (
+        <SquadTab
+          onSeasonChange={setSelectedSquadSeason}
+          players={players}
+          seasonOptions={squadSeasonOptions}
+          selectedSeason={selectedSquadSeason}
+        />
+      ),
       records: (
         <RecordsTab
           currentStanding={currentStanding}
@@ -707,7 +756,9 @@ const TeamPage = () => {
     formRecord,
     players,
     recentMatches,
+    selectedSquadSeason,
     standings,
+    squadSeasonOptions,
     teamFacts,
     teamFormEntries,
     teamLeaders,
@@ -717,12 +768,15 @@ const TeamPage = () => {
   const loadTeam = useCallback(async () => {
     setLoading(true);
 
-    const result = await getTeamById(teamApiId);
+    const result = await getTeamById(teamApiId, { season: selectedSquadSeason });
 
     if(result.ok){
+      const nextSquadSeasons = (result.data?.player_seasons || []).map(String);
+
       setTeam(result.data?.team || null);
       setStandings(result.data?.standings || []);
       setPlayers(result.data?.players || []);
+      setSquadSeasons(nextSquadSeasons);
       setRecentMatches(result.data?.recent_matches || []);
       setUpcomingMatches(result.data?.upcoming_matches || []);
       setMessage(result.data?.message || "Team loaded successfully");
@@ -730,13 +784,14 @@ const TeamPage = () => {
       setTeam(null);
       setStandings([]);
       setPlayers([]);
+      setSquadSeasons([]);
       setRecentMatches([]);
       setUpcomingMatches([]);
       setMessage(result.data?.message || result.data?.error || "Failed to load team");
     }
 
     setLoading(false);
-  }, [teamApiId]);
+  }, [selectedSquadSeason, teamApiId]);
 
   const loadFavoriteStatus = useCallback(async () => {
     if(!user || !team?.id){
@@ -868,7 +923,7 @@ const TeamPage = () => {
       </PanelCard>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Players Synced" value={players.length} icon={<FaUsers />} />
+        <SummaryCard label={`Players ${selectedSquadSeason}`} value={players.length} icon={<FaUsers />} />
         <SummaryCard label={currentStanding ? `Rank ${currentStanding.season}` : "Standing Rank"} value={currentStanding ? `#${currentStanding.rank}` : "Not ranked"} icon={<FaCrown />} />
         <SummaryCard label="Recent Matches" value={recentMatches.length} icon={<FaFutbol />} />
         <SummaryCard label="Player Goals" value={totalGoals} icon={<FaStar />} />

@@ -4,6 +4,8 @@ import { FaArrowRight, FaTrophy } from 'react-icons/fa';
 const leagues = [
     { id: 39, name: 'Premier League', country: 'England', season: 2024 },
     { id: 140, name: 'LaLiga', country: 'Spain', season: 2024 },
+    { id: 135, name: 'Serie A', country: 'Italy', season: 2024 },
+    { id: 61, name: 'Ligue 1', country: 'France', season: 2024 },
     { id: 307, name: 'Saudi Pro League', country: 'Saudi Arabia', season: 2024 },
     { id: 253, name: 'Major League Soccer', country: 'United States', season: 2024 },
 ];

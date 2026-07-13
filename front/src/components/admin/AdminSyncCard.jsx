@@ -24,13 +24,28 @@ const AdminSyncCard = ({ task, values, isRunning, onFieldChange, onRun }) => {
         {task.fields.map((field) => (
           <label key={field.name} className="text-sm text-gray-300">
             {field.label}
-            <input
-              type={field.type}
-              value={values[field.name]}
-              onChange={(event) => onFieldChange(task.key, field.name, event.target.value)}
-              className="mt-1 w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#8b5cf6]"
-              required
-            />
+            {field.type === "select" ? (
+              <select
+                value={values[field.name]}
+                onChange={(event) => onFieldChange(task.key, field.name, event.target.value)}
+                className="mt-1 w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#8b5cf6]"
+                required
+              >
+                {field.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={field.type}
+                value={values[field.name]}
+                onChange={(event) => onFieldChange(task.key, field.name, event.target.value)}
+                className="mt-1 w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#8b5cf6]"
+                required
+              />
+            )}
           </label>
         ))}
 

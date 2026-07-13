@@ -38,7 +38,6 @@ const getDaysCount = (from, to) => {
 
     return diffDays + 1;
 };
-//kleng dak league alov dak tah world cup sen teh
 const allowLeagueIds = [1,2,113,103,244];
 const finishedStatusShortCodes = ["FT", "AET", "PEN"];
 const isLeagueAllowed = (apiLeagueId)=>{

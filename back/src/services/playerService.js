@@ -71,7 +71,22 @@ const formatStatistic = (statistic) => {
     };
 };
 
-const getPlayerByApiIdFromDatabaseOnly = async (apiPlayerId) => {
+const getAvailableStatisticSeasons = async (playerId) => {
+    const seasonRows = await PlayerStatistic.findAll({
+        where: {
+            player_id: playerId,
+        },
+        attributes: ["season"],
+        group: ["season"],
+        order: [["season", "DESC"]],
+    });
+
+    return seasonRows
+        .map((row) => Number(row.get("season")))
+        .filter((season) => Number.isInteger(season));
+};
+
+const getPlayerByApiIdFromDatabaseOnly = async (apiPlayerId, { season = null } = {}) => {
     const player = await Player.findOne({
         where: {
             api_player_id: apiPlayerId,
@@ -83,14 +98,24 @@ const getPlayerByApiIdFromDatabaseOnly = async (apiPlayerId) => {
             source: "database_only",
             player: null,
             statistics: [],
+            statistic_seasons: [],
+            selected_statistic_season: null,
             apiRequestUsed: false,
         };
     }
 
+    const statisticSeasons = await getAvailableStatisticSeasons(player.id);
+    const selectedStatisticSeason = season || statisticSeasons[0] || null;
+    const statisticWhere = {
+        player_id: player.id,
+    };
+
+    if(selectedStatisticSeason){
+        statisticWhere.season = selectedStatisticSeason;
+    }
+
     const statistics = await PlayerStatistic.findAll({
-        where: {
-            player_id: player.id,
-        },
+        where: statisticWhere,
         include: [
             {
                 model: Team,
@@ -108,6 +133,8 @@ const getPlayerByApiIdFromDatabaseOnly = async (apiPlayerId) => {
         source: "database_only",
         player: formatPublicPlayer(player),
         statistics: statistics.map(formatStatistic),
+        statistic_seasons: statisticSeasons,
+        selected_statistic_season: selectedStatisticSeason,
         apiRequestUsed: false,
     };
 };

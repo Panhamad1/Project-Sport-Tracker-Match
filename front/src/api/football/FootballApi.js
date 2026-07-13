@@ -55,12 +55,20 @@ export const getLeagueStandings = ({ league, season }) => {
   }));
 };
 
-export const getTeamById = (apiTeamId) => {
-  return requestFootball(() => API.get(`/teams/${apiTeamId}`));
+export const getTeamById = (apiTeamId, { season } = {}) => {
+  return requestFootball(() => API.get(`/teams/${apiTeamId}`, {
+    params: {
+      season,
+    },
+  }));
 };
 
-export const getPlayerById = (apiPlayerId) => {
-  return requestFootball(() => API.get(`/players/${apiPlayerId}`));
+export const getPlayerById = (apiPlayerId, { season } = {}) => {
+  return requestFootball(() => API.get(`/players/${apiPlayerId}`, {
+    params: {
+      season,
+    },
+  }));
 };
 
 export const searchFootball = ({ search, type = "all", position }) => {

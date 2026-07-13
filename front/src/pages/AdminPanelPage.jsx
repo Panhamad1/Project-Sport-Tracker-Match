@@ -22,6 +22,11 @@ import PanelCard from "../components/common/PanelCard";
 const today = new Date().toISOString().slice(0, 10);
 const historyStorageKey = "football_admin_sync_history";
 const historyLimit = 8;
+const seasonOptions = [
+  { value: "2024", label: "2024" },
+  { value: "2023", label: "2023" },
+  { value: "2022", label: "2022" },
+];
 
 const initialForms = {
   fixtures: {
@@ -36,19 +41,23 @@ const initialForms = {
   },
   players: {
     teamApiId: "541",
-    allSeasons: true,
+    season: "2024",
+    allSeasons: false,
   },
   player: {
     playerApiId: "",
-    allSeasons: true,
+    season: "2024",
+    allSeasons: false,
   },
 };
 
 const presets = [
-  "World Cup: league 1",
-  "Champions League: league 2",
   "Premier League: league 39",
   "LaLiga: league 140",
+  "Serie A: league 135",
+  "Ligue 1: league 61",
+  "Saudi Pro League: league 307",
+  "MLS: league 253",
   "Real Madrid: team 541",
   "Barcelona: team 529",
   "Al Nassr: team 2939",
@@ -278,9 +287,10 @@ const AdminPanelPage = () => {
     {
       key: "players",
       title: "Sync Players",
-      description: "Fetch players by team across 2022, 2023, and 2024.",
+      description: "Fetch players by team for the selected season.",
       fields: [
         { name: "teamApiId", label: "Team API ID", type: "number" },
+        { name: "season", label: "Season", type: "select", options: seasonOptions },
       ],
       submitLabel: "Sync Players",
       run: syncPlayers,
@@ -288,9 +298,10 @@ const AdminPanelPage = () => {
     {
       key: "player",
       title: "Sync Specific Player",
-      description: "Fetch one important player across 2022, 2023, and 2024 when team pagination misses them.",
+      description: "Fetch one important player for the selected season when team pagination misses them.",
       fields: [
         { name: "playerApiId", label: "Player API ID", type: "number" },
+        { name: "season", label: "Season", type: "select", options: seasonOptions },
       ],
       submitLabel: "Sync Player",
       run: syncPlayer,
