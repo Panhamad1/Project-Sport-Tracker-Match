@@ -40,7 +40,7 @@ function AppRouter() {
     <BrowserRouter>
         <Routes>
             <Route path="/login" element={<GuestOnlyRoute><LoginPage /></GuestOnlyRoute>} />
-            <Route path="/" element={<GuestOnlyRoute><SignupPage /></GuestOnlyRoute>} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/signup" element={<GuestOnlyRoute><SignupPage /></GuestOnlyRoute>} />
 
             <Route element={<MainLayout />}>

@@ -59,7 +59,7 @@ const PredictionPick = sequelize.define("PredictionPick",
         indexes: [
             {
                 unique: true,
-                fields: ["user_id", "fixture_id", "prediction_key"],
+                fields: ["user_id", "fixture_id"],
             },
             {
                 fields: ["fixture_id", "points_awarded"],

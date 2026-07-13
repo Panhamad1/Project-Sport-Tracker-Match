@@ -6,7 +6,6 @@ import {
   FaHome,
   FaNewspaper,
   FaShieldAlt,
-  FaSignInAlt,
   FaTrophy,
   FaTv,
   FaUserCircle,
@@ -26,7 +25,7 @@ const publicLinks = [
 
 const NavigationBar = () => {
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
   const accountLinks = user
@@ -66,33 +65,7 @@ const NavigationBar = () => {
           ))}
         </ul>
 
-        <div className="flex items-center gap-2">
-          {user ? (
-            <Link
-              to="/profile"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2a2a2a]"
-            >
-              <FaUserCircle className="text-[#8b5cf6]" />
-              {user.username || 'Profile'}
-            </Link>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 rounded-lg bg-[#1a1a1a] px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-[#2a2a2a] hover:text-white"
-              >
-                <FaSignInAlt />
-                {loading ? 'Loading...' : 'Log In'}
-              </Link>
-              <Link
-                to="/"
-                className="rounded-lg bg-[#8b5cf6] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#7c3aed]"
-              >
-                Create Account
-              </Link>
-            </>
-          )}
-        </div>
+        <div className="hidden xl:block" />
       </div>
     </nav>
   );

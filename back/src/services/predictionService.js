@@ -532,6 +532,7 @@ const getPredictionPicksForMatch = async (userId, fixtureId) => {
         },
         include: predictionPickInclude,
         order: [["created_at", "DESC"]],
+        limit: 1,
     });
 };
 
@@ -618,28 +619,44 @@ const savePredictionPickService = async (userId, apiFixtureId, fixtureOddId) => 
         potential_points: oddSnapshot,
     };
 
-    const [predictionPick, created] = await PredictionPick.findOrCreate({
+    const existingPredictionPicks = await PredictionPick.findAll({
         where: {
             user_id: userId,
             fixture_id: fixture.id,
-            prediction_key: fixtureOdd.prediction_key,
         },
-        defaults: values,
     });
 
-    if (!created) {
-        if (predictionPick.points_awarded !== null) {
-            return {
-                status: "awarded",
-                message: "Prediction pick already awarded and cannot be changed",
-            };
-        }
+    const awardedPredictionPick = existingPredictionPicks.find((predictionPick) => predictionPick.points_awarded !== null);
 
-        await predictionPick.update(values);
+    if (awardedPredictionPick) {
+        return {
+            status: "awarded",
+            message: "Prediction pick already awarded and cannot be changed",
+        };
     }
 
-    const savedPredictionPick = await PredictionPick.findByPk(predictionPick.id, {
-        include: predictionPickInclude,
+    const created = existingPredictionPicks.length === 0;
+
+    const savedPredictionPick = await sequelize.transaction(async (transaction) => {
+        if (existingPredictionPicks.length > 0) {
+            await PredictionPick.destroy({
+                where: {
+                    user_id: userId,
+                    fixture_id: fixture.id,
+                    points_awarded: {
+                        [Op.is]: null,
+                    },
+                },
+                transaction,
+            });
+        }
+
+        const newPredictionPick = await PredictionPick.create(values, { transaction });
+
+        return PredictionPick.findByPk(newPredictionPick.id, {
+            include: predictionPickInclude,
+            transaction,
+        });
     });
 
     return {
@@ -769,12 +786,40 @@ const awardPredictionPointsService = async (apiFixtureId) => {
         },
     });
     const unawardedPicks = predictionPicks.filter((predictionPick) => predictionPick.points_awarded === null);
+    const sortedUnawardedPicks = [...unawardedPicks].sort((firstPick, secondPick) => {
+        const firstDate = new Date(firstPick.updated_at || firstPick.updatedAt || firstPick.created_at || firstPick.createdAt || 0);
+        const secondDate = new Date(secondPick.updated_at || secondPick.updatedAt || secondPick.created_at || secondPick.createdAt || 0);
+
+        return secondDate - firstDate;
+    });
+    const unawardedPickByUser = new Map();
+    const duplicateUnawardedPickIds = [];
+
+    for (const predictionPick of sortedUnawardedPicks) {
+        if (unawardedPickByUser.has(predictionPick.user_id)) {
+            duplicateUnawardedPickIds.push(predictionPick.id);
+        } else {
+            unawardedPickByUser.set(predictionPick.user_id, predictionPick);
+        }
+    }
+    const awardablePicks = Array.from(unawardedPickByUser.values());
     const awardedAt = new Date();
 
     const awardedPicks = await sequelize.transaction(async (transaction) => {
         const awarded = [];
 
-        for (const predictionPick of unawardedPicks) {
+        if (duplicateUnawardedPickIds.length > 0) {
+            await PredictionPick.destroy({
+                where: {
+                    id: {
+                        [Op.in]: duplicateUnawardedPickIds,
+                    },
+                },
+                transaction,
+            });
+        }
+
+        for (const predictionPick of awardablePicks) {
             const correct = isPickCorrect(predictionPick, fixture);
             const oddSnapshot = toMoneyNumber(predictionPick.odd_snapshot);
             const points = correct ? oddSnapshot : -oddSnapshot;
@@ -816,6 +861,7 @@ const awardPredictionPointsService = async (apiFixtureId) => {
         total_picks: predictionPicks.length,
         newly_awarded: awardedPicks.length,
         skipped_already_awarded: predictionPicks.length - unawardedPicks.length,
+        duplicate_pending_removed: duplicateUnawardedPickIds.length,
         awardedPicks,
     };
 };

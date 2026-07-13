@@ -278,14 +278,8 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
     return () => window.clearTimeout(loadTimer);
   }, [loadOptions]);
 
-  const pickByPredictionKey = useMemo(() => {
-    const map = new Map();
-
-    (options?.my_picks || []).forEach((pick) => {
-      map.set(pick.prediction_key, pick);
-    });
-
-    return map;
+  const currentPick = useMemo(() => {
+    return (options?.my_picks || [])[0] || null;
   }, [options]);
 
   const handlePick = async (odd) => {
@@ -363,7 +357,7 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
             <p className="text-xs font-medium text-[#8b5cf6]">Prediction Game</p>
             <h3 className="mt-1 text-lg font-bold text-white">Pick from synced odds</h3>
             <p className="mt-1 text-sm text-gray-400">
-              Correct picks add the odd value. Wrong picks lose the same value.
+              Choose one pick for this match. Picking another option replaces your current pick before kickoff.
             </p>
           </div>
 
@@ -417,20 +411,16 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
               <div>
                 <h4 className="mb-3 text-sm font-semibold text-white">Winner</h4>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  {winnerOdds.map((odd) => {
-                    const selectedPick = pickByPredictionKey.get(odd.prediction_key);
-
-                    return (
+                  {winnerOdds.map((odd) => (
                       <PredictionOddButton
                         key={odd.fixture_odd_id}
                         disabled={options?.is_locked}
                         isSaving={savingOddId === odd.fixture_odd_id}
-                        isSelected={selectedPick?.fixture_odd_id === odd.fixture_odd_id}
+                        isSelected={currentPick?.fixture_odd_id === odd.fixture_odd_id}
                         odd={odd}
                         onPick={handlePick}
                       />
-                    );
-                  })}
+                  ))}
                 </div>
               </div>
             )}
@@ -439,10 +429,7 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
               <div>
                 <h4 className="mb-3 text-sm font-semibold text-white">Over / Under</h4>
                 <div className="space-y-3">
-                  {overUnderGroups.map((group) => {
-                    const selectedPick = pickByPredictionKey.get(group.prediction_key);
-
-                    return (
+                  {overUnderGroups.map((group) => (
                       <div key={group.prediction_key} className="rounded-lg border border-[#2a2a2a] bg-black/20 p-3">
                         <p className="mb-3 text-xs font-medium text-gray-400">Line {group.line}</p>
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -451,40 +438,38 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
                               key={odd.fixture_odd_id}
                               disabled={options?.is_locked}
                               isSaving={savingOddId === odd.fixture_odd_id}
-                              isSelected={selectedPick?.fixture_odd_id === odd.fixture_odd_id}
+                              isSelected={currentPick?.fixture_odd_id === odd.fixture_odd_id}
                               odd={odd}
                               onPick={handlePick}
                             />
                           ))}
                         </div>
                       </div>
-                    );
-                  })}
+                  ))}
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {(options?.my_picks || []).length > 0 && (
+        {currentPick && (
           <div className="mt-5 border-t border-[#2a2a2a] pt-4">
-            <h4 className="mb-3 text-sm font-semibold text-white">My Picks</h4>
+            <h4 className="mb-3 text-sm font-semibold text-white">Current Pick</h4>
             <div className="space-y-2">
-              {options.my_picks.map((pick) => (
-                <div key={pick.prediction_pick_id} className="flex flex-col gap-3 rounded-lg border border-[#2a2a2a] bg-black/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-lg border border-[#2a2a2a] bg-black/20 p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-white">{pick.selection_label}</p>
+                    <p className="text-sm font-semibold text-white">{currentPick.selection_label}</p>
                     <p className="mt-1 text-xs text-gray-500">
-                      {pick.market_type.replace("_", " ")} · Odd {pick.odd_snapshot} · Risk/reward {pick.potential_points} pts
+                      {currentPick.market_type.replace("_", " ")} - Odd {currentPick.odd_snapshot} - Risk/reward {currentPick.potential_points} pts
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleDeletePick(pick.prediction_pick_id)}
-                    disabled={options?.is_locked || deletingPickId === pick.prediction_pick_id}
+                    onClick={() => handleDeletePick(currentPick.prediction_pick_id)}
+                    disabled={options?.is_locked || deletingPickId === currentPick.prediction_pick_id}
                     className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-200 transition-all hover:bg-red-500/20 disabled:bg-[#111111] disabled:cursor-not-allowed"
                   >
-                    {deletingPickId === pick.prediction_pick_id ? (
+                    {deletingPickId === currentPick.prediction_pick_id ? (
                       <FaSpinner className="animate-spin" />
                     ) : (
                       <FaTrash />
@@ -492,9 +477,8 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
                     Remove
                   </button>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
         )}
       </div>
     </div>

@@ -106,7 +106,7 @@ const savePrediction = async (req, res) => {
         }
 
         return res.status(result.created ? 201 : 200).json({
-            message: result.created ? "Prediction pick created successfully" : "Prediction pick updated successfully",
+            message: result.created ? "Prediction pick saved successfully" : "Prediction pick replaced successfully",
             predictionPick: result.predictionPick,
         });
     } catch (error) {
