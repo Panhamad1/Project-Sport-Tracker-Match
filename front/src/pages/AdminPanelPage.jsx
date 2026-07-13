@@ -6,6 +6,7 @@ import {
   syncFixtures,
   syncMatchDetails,
   syncMatchDetailsByDate,
+  syncNews,
   syncPlayer,
   syncPlayers,
   syncStandings,
@@ -49,6 +50,7 @@ const initialForms = {
     season: "2024",
     allSeasons: false,
   },
+  news: {},
 };
 
 const presets = [
@@ -157,7 +159,12 @@ const hasSyncFailure = (result) => {
 
 const getSyncAttempt = (task, values) => {
   return task.fields
-    .map((field) => `${field.label}: ${values[field.name]}`)
+    .map((field) => {
+      const value = values[field.name];
+
+      return value === "" || value === null || value === undefined ? "" : `${field.label}: ${value}`;
+    })
+    .filter(Boolean)
     .join(", ");
 };
 
@@ -305,6 +312,14 @@ const AdminPanelPage = () => {
       ],
       submitLabel: "Sync Player",
       run: syncPlayer,
+    },
+    {
+      key: "news",
+      title: "Sync Football News",
+      description: "Fetch the latest English football news and save it to the database.",
+      fields: [],
+      submitLabel: "Sync News",
+      run: syncNews,
     },
   ], []);
 

@@ -76,6 +76,12 @@ export const syncStandings = ({ league, season }) => {
     }));
 };
 
+export const syncNews = ({ q, lang, country, max, page, sortby } = {}) => {
+    return requestSync(() => API.post("/news", {}, {
+        params: cleanParams({ q, lang, country, max, page, sortby }),
+    }));
+};
+
 export const syncMatchDetails = ({ matchId }) => {
     return requestSync(() => API.post(`/matches/${matchId}/details`, {}));
 };

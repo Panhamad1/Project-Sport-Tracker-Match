@@ -18,6 +18,7 @@ import DreamTeam from "./dreamTeam.js";
 import FixtureOdd from "./fixtureOdd.js";
 import PredictionPick from "./predictionPick.js";
 import Notification from "./notification.js";
+import NewsArticle from "./newsArticle.js";
 League.hasMany(Fixture,{
     foreignKey: "league_id",
     as:"fixtures",
@@ -264,4 +265,4 @@ PlayerStatistic.belongsTo(League, {
 });
 
 
-export { sequelize, User, League, Team, Fixture, FixtureSyncLog, FavoriteTeam, PinnedMatch, Player, PlayerStatistic, MatchDetail, LeagueStanding, StreamLink, FeaturedFixture, Prediction, DreamTeam, FixtureOdd, PredictionPick, Notification };
+export { sequelize, User, League, Team, Fixture, FixtureSyncLog, FavoriteTeam, PinnedMatch, Player, PlayerStatistic, MatchDetail, LeagueStanding, StreamLink, FeaturedFixture, Prediction, DreamTeam, FixtureOdd, PredictionPick, Notification, NewsArticle };

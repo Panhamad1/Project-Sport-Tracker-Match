@@ -6,6 +6,7 @@ import { syncTeams } from "../controllers/teamSyncController.js";
 import { syncPlayer, syncPlayers } from "../controllers/playerSyncController.js";
 import { syncMatchDetails, syncMatchDetailsForDate } from "../controllers/matchDetailSyncController.js";
 import { syncStandings } from "../controllers/standingSyncController.js";
+import { syncNews } from "../controllers/newsSyncController.js";
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ router.post("/teams",protect,adminOnly,syncTeams);
 router.post("/players",protect,adminOnly,syncPlayers);
 router.post("/players/:playerApiId",protect,adminOnly,syncPlayer);
 router.post("/standings",protect,adminOnly,syncStandings);
+router.post("/news",protect,adminOnly,syncNews);
 router.post("/matches/details/date/:date",protect,adminOnly,syncMatchDetailsForDate);
 router.post("/matches/:matchId/details",protect,adminOnly,syncMatchDetails);
 export default router;

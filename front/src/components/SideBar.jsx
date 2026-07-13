@@ -57,7 +57,7 @@ const SideBar = ({ isExpanded }) => {
   };
 
   return (
-    <aside className={`bg-[#050505] border-r border-[#2a2a2a] min-h-[calc(100vh-80px)] flex flex-col transition-all duration-300
+    <aside className={`bg-[#050505] border-r border-[#2a2a2a] min-h-[calc(100vh-80px)] h-full flex flex-col transition-all duration-300
         ${isExpanded ? 'sm:w-48 md:w-56 lg:w-64' : 'sm:w-14 md:w-16 lg:w-20'}
       `}>
       <nav className={`flex-1 flex flex-col overflow-hidden ${!isExpanded && 'p-4'}`}>
