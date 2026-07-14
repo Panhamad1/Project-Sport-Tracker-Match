@@ -57,10 +57,10 @@ const SideBar = ({ isExpanded }) => {
   };
 
   return (
-    <aside className={`flex h-full min-h-0 flex-col border-r border-[#2a2a2a] bg-[#050505] transition-all duration-300
+    <aside className={`flex h-full min-h-0 flex-col overflow-hidden border-r border-[#2a2a2a] bg-[#050505] transition-all duration-300
         ${isExpanded ? 'sm:w-48 md:w-56 lg:w-64' : 'sm:w-14 md:w-16 lg:w-20'}
       `}>
-      <nav className={`flex-1 flex flex-col overflow-hidden ${!isExpanded && 'p-4'}`}>
+      <nav className={`scrollbar-hide flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden ${!isExpanded && 'p-4'}`}>
         <ul className={`space-y-1 shrink-0 flex flex-col justify-center ${isExpanded && 'm-4'}`}>
           {[...sidebarLinks, ...accountLinks, ...adminLinks].map((link) => (
             <li key={link.path}>
