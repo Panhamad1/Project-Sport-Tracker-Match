@@ -259,6 +259,10 @@ Example:
 
 ## Main Backend Routes
 
+API documentation:
+- `GET /api-docs`
+- `GET /api-docs/json`
+
 Auth:
 - `POST /api/auth/register`
 - `POST /api/auth/login`

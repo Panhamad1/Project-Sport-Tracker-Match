@@ -44,6 +44,20 @@ Admins:
 back/src/server.js
 ```
 
+## API Documentation
+
+Swagger API documentation is available from the backend:
+
+```txt
+/api-docs
+```
+
+The OpenAPI JSON file is available at:
+
+```txt
+/api-docs/json
+```
+
 Local backend URL:
 
 ```txt

@@ -21,6 +21,7 @@ import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import dreamTeamRoutes from "./routes/dreamTeamRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import newsRoutes from "./routes/newsRoutes.js";
+import docsRoutes from "./routes/docsRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -31,9 +32,11 @@ app.use(express.json());
 //routes 
 app.get('/',(req,res) =>{
     res.json({
-        message: "API is running"
+        message: "API is running",
+        docs: "/api-docs",
     });
 });
+app.use("/api-docs", docsRoutes);
 app.use("/api/auth",authRoutes);
 app.use("/api/football/fixtures",fixtureRoutes);
 app.use("/api/football/matches",matchRoutes);
