@@ -7,14 +7,15 @@ import {
     getMyPredictions,
     savePrediction,
 } from "../controllers/predictionController.js";
-import { protect } from "../middlewares/authMiddleware.js";
+import { optionalAuth, protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
+
+router.get("/matches/:apiFixtureId/options", optionalAuth, getMatchPredictionOptions);
 
 router.use(protect);
 
 router.get("/me", getMyPredictions);
-router.get("/matches/:apiFixtureId/options", getMatchPredictionOptions);
 router.post("/matches/:apiFixtureId", savePrediction);
 router.post("/matches/:apiFixtureId/picks", savePrediction);
 router.get("/matches/:apiFixtureId/me", getMyPredictionForMatch);

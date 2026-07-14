@@ -32,10 +32,11 @@ const TeamBlock = ({ team, align = "left" }) => {
 
 const MatchCard = ({ fixture }) => {
   const publicMatchId = fixture.public_match_id || fixture.api_fixture_id;
+  const matchPath = `/matches/${publicMatchId}`;
 
   return (
     <Link
-      to={`/matches/${publicMatchId}`}
+      to={matchPath}
       className="block rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] p-4 transition-all hover:border-[#8b5cf6]/50 hover:bg-[#111111]"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2a2a2a] pb-3">

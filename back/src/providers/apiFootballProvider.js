@@ -1,6 +1,12 @@
 import dotenv from "dotenv";
 import axios from "axios";
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const BASE_URL = process.env.API_FOOTBALL_BASE_URL || "https://v3.football.api-sports.io";
 
@@ -11,7 +17,7 @@ const apiFootballClient = axios.create({
 const apiFootballGet = async (endpoint, params = {}) =>{
     const apiKey = process.env.API_FOOTBALL_KEY;
     if(!apiKey){
-        throw new Error("api key is missing");
+        throw new Error("API_FOOTBALL_KEY is missing in backend environment variables");
     }
     try {
         const res = await apiFootballClient.get(endpoint, {

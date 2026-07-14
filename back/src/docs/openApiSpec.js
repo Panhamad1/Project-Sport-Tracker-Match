@@ -778,13 +778,13 @@ const openApiSpec = {
         "/api/admin/sync/matches/details/date/{date}": {
             post: {
                 tags: ["Admin Sync"],
-                summary: "Sync match details for all saved fixtures on a date",
+                summary: "Sync match details and prediction odds for all saved fixtures on a date",
                 security: bearerSecurity,
                 parameters: [
                     pathParam("date", "Fixture date in YYYY-MM-DD", { type: "string", format: "date" }),
                 ],
                 responses: {
-                    200: ok("Match details synced by date"),
+                    200: ok("Match details and prediction odds synced by date"),
                     400: badRequest,
                     ...adminResponses,
                 },
@@ -793,13 +793,13 @@ const openApiSpec = {
         "/api/admin/sync/matches/{matchId}/details": {
             post: {
                 tags: ["Admin Sync"],
-                summary: "Sync match details for one local fixture id",
+                summary: "Sync match details and prediction odds for one local fixture id",
                 security: bearerSecurity,
                 parameters: [
                     pathParam("matchId", "Local fixture id"),
                 ],
                 responses: {
-                    200: ok("Match details synced"),
+                    200: ok("Match details and prediction odds synced"),
                     404: notFound,
                     ...adminResponses,
                 },

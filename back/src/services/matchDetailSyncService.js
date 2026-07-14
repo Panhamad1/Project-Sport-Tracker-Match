@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { Fixture, MatchDetail, Team } from "../models/index.js";
 import { apiFootballGet } from "../providers/apiFootballProvider.js";
+import { syncFixtureOddsService } from "./predictionService.js";
 import { getCambodiaDateRange } from "../utils/cambodiaTime.js";
 
 const isValidDate = (date) => {
@@ -25,6 +26,45 @@ const safeApiFootballGet = async (section, endpoint, params) => {
             error_message: error.message,
         };
     }
+};
+
+const safeSyncFixtureOdds = async (apiFixtureId) => {
+    try {
+        const result = await syncFixtureOddsService(apiFixtureId);
+        const isSuccess = result.status === "success";
+
+        return {
+            section: "odds",
+            status: isSuccess ? "success" : result.status || "failed",
+            data: result,
+            error_message: isSuccess ? null : result.message || "Failed to sync prediction odds",
+        };
+    } catch (error) {
+        return {
+            section: "odds",
+            status: "failed",
+            data: null,
+            error_message: error.message,
+        };
+    }
+};
+
+const summarizeOddsSync = (oddsResult) => {
+    if (oddsResult.status !== "success") {
+        return {
+            section: oddsResult.section,
+            status: oddsResult.status,
+            error_message: oddsResult.error_message,
+        };
+    }
+
+    return {
+        section: oddsResult.section,
+        status: oddsResult.status,
+        message: oddsResult.data.message,
+        count: oddsResult.data.count,
+        raw_count: oddsResult.data.raw_count,
+    };
 };
 
 const syncMatchDetailsById = async (matchId) => {
@@ -71,6 +111,7 @@ const syncMatchDetailsById = async (matchId) => {
     const h2hResult = await safeApiFootballGet("h2h", "/fixtures/headtohead", {
         h2h: h2hTeams,
     });
+    const oddsResult = await safeSyncFixtureOdds(fixture.api_fixture_id);
     const existingRawData = existingDetail?.raw_data || {};
 
     const values = {
@@ -86,6 +127,7 @@ const syncMatchDetailsById = async (matchId) => {
             prediction: predictionResult,
             events: eventsResult.status === "success" ? eventsResult : existingRawData.events || eventsResult,
             h2h: h2hResult,
+            odds: summarizeOddsSync(oddsResult),
         },
         last_synced_at: new Date(),
     };
@@ -111,6 +153,7 @@ const syncMatchDetailsById = async (matchId) => {
             prediction: predictionResult.status,
             events: eventsResult.status,
             h2h: h2hResult.status,
+            odds: oddsResult.status,
         },
         errors: {
             statistics: statisticsResult.error_message,
@@ -118,7 +161,9 @@ const syncMatchDetailsById = async (matchId) => {
             prediction: predictionResult.error_message,
             events: eventsResult.error_message,
             h2h: h2hResult.error_message,
+            odds: oddsResult.error_message,
         },
+        odds: summarizeOddsSync(oddsResult),
         detail: matchDetail,
     };
 };

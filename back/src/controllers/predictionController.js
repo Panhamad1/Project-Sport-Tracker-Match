@@ -46,7 +46,7 @@ const syncFixtureOdds = async (req, res) => {
 
 const getMatchPredictionOptions = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user?.id || null;
         const apiFixtureId = getPositiveIntegerParam(req.params.apiFixtureId);
 
         if (!apiFixtureId) {

@@ -525,6 +525,10 @@ const getFixtureOddsForMatch = async (fixtureId) => {
 };
 
 const getPredictionPicksForMatch = async (userId, fixtureId) => {
+    if (!userId) {
+        return [];
+    }
+
     return PredictionPick.findAll({
         where: {
             user_id: userId,

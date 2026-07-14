@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   FaArrowLeft,
   FaCalendarAlt,
@@ -398,6 +398,32 @@ const TeamFormPanel = ({ formEntries, record }) => {
   );
 };
 
+const PlayerAvatar = ({ player, size = "sm" }) => {
+  const sizeClass = size === "md" ? "h-11 w-11" : "h-9 w-9";
+
+  if(player?.photo){
+    return <img src={player.photo} alt="" className={`${sizeClass} shrink-0 rounded-full object-cover`} />;
+  }
+
+  return (
+    <span className={`inline-flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-[#1a1a1a] text-[#a78bfa]`}>
+      <FaUsers />
+    </span>
+  );
+};
+
+const PlayerProfileLink = ({ children, className, player }) => {
+  if(player?.api_player_id){
+    return (
+      <Link to={`/players/${player.api_player_id}`} className={className}>
+        {children}
+      </Link>
+    );
+  }
+
+  return <div className={className}>{children}</div>;
+};
+
 const TeamLeadersPanel = ({ leaders }) => {
   return (
     <PanelCard className="p-5">
@@ -421,14 +447,12 @@ const TeamLeadersPanel = ({ leaders }) => {
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
           {leaders.map((leader) => (
-            <div key={leader.key} className="flex items-center gap-3 rounded-lg border border-[#2a2a2a] bg-[#111111] p-3">
-              {leader.player.photo ? (
-                <img src={leader.player.photo} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
-              ) : (
-                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1a1a1a] text-[#a78bfa]">
-                  <FaUsers />
-                </span>
-              )}
+            <PlayerProfileLink
+              key={leader.key}
+              player={leader.player}
+              className="flex items-center gap-3 rounded-lg border border-[#2a2a2a] bg-[#111111] p-3 transition-all hover:border-[#8b5cf6]/50 hover:bg-[#151515]"
+            >
+              <PlayerAvatar player={leader.player} size="md" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-[#a78bfa]">{leader.label}</p>
                 <p className="truncate text-sm font-semibold text-white">{leader.player.name || "Player"}</p>
@@ -437,7 +461,7 @@ const TeamLeadersPanel = ({ leaders }) => {
                 <p className="text-lg font-bold text-white">{leader.value}</p>
                 <p className="text-[11px] text-gray-500">{leader.statLabel}</p>
               </div>
-            </div>
+            </PlayerProfileLink>
           ))}
         </div>
       )}
@@ -522,27 +546,18 @@ const PlayerTable = ({ players }) => {
           {players.map((player) => (
             <tr key={`${player.api_player_id}-${player.league?.api_league_id}-${player.season}`} className="border-t border-[#2a2a2a]">
               <td className="px-4 py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  {player.photo ? (
-                    <img src={player.photo} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1a1a1a] text-xs text-[#a78bfa]">
-                      <FaUsers />
-                    </span>
-                  )}
+                <PlayerProfileLink
+                  player={player}
+                  className="group flex min-w-0 items-center gap-3 rounded-md transition-colors hover:text-[#a78bfa]"
+                >
+                  <PlayerAvatar player={player} />
                   <div className="min-w-0">
-                    {player.api_player_id ? (
-                      <Link to={`/players/${player.api_player_id}`} className="truncate font-semibold text-white transition-colors hover:text-[#a78bfa]">
-                        {player.name || "Player"}
-                      </Link>
-                    ) : (
-                      <p className="truncate font-semibold text-white">{player.name || "Player"}</p>
-                    )}
+                    <p className="truncate font-semibold text-white transition-colors group-hover:text-[#a78bfa]">{player.name || "Player"}</p>
                     {player.nationality && (
                       <p className="truncate text-xs text-gray-500">{player.nationality}</p>
                     )}
                   </div>
-                </div>
+                </PlayerProfileLink>
               </td>
               <td className="px-4 py-4 text-gray-300">{player.position || "POS"}</td>
               <td className="px-4 py-4 text-gray-300" title={getCompetitionTitle(player)}>
@@ -667,6 +682,7 @@ const RecordsTab = ({ currentStanding, formRecord, standings, teamFormEntries, t
 
 const TeamPage = () => {
   const { teamApiId } = useParams();
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [team, setTeam] = useState(null);
@@ -681,6 +697,14 @@ const TeamPage = () => {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteMessage, setFavoriteMessage] = useState("");
+  const handleBack = () => {
+    if(window.history.length > 1){
+      navigate(-1);
+      return;
+    }
+
+    navigate("/leagues");
+  };
 
   const currentStanding = standings[0];
   const profileChips = [
@@ -857,10 +881,14 @@ const TeamPage = () => {
   if(!team){
     return (
       <div className="space-y-4 text-white">
-        <Link to="/leagues" className="inline-flex items-center gap-2 text-sm text-[#a78bfa] hover:text-white">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 text-sm text-[#a78bfa] hover:text-white"
+        >
           <FaArrowLeft />
-          Back to leagues
-        </Link>
+          Back
+        </button>
         <NoDataState title="Team Not Found" message={message || "This team does not exist in the database yet."} />
       </div>
     );
@@ -868,10 +896,14 @@ const TeamPage = () => {
 
   return (
     <div className="space-y-6 text-white">
-      <Link to="/leagues" className="inline-flex items-center gap-2 text-sm text-[#a78bfa] hover:text-white">
+      <button
+        type="button"
+        onClick={handleBack}
+        className="inline-flex items-center gap-2 text-sm text-[#a78bfa] hover:text-white"
+      >
         <FaArrowLeft />
-        Back to leagues
-      </Link>
+        Back
+      </button>
 
       <PanelCard className="overflow-hidden">
         <div className="p-5">

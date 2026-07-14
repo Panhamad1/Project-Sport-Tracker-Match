@@ -426,7 +426,7 @@ const AdminPanelPage = () => {
   };
 
   const syncFixtureDetailsByDate = async ({ date, fixturesCount }) => {
-    const estimatedRequests = fixturesCount * 5;
+    const estimatedRequests = fixturesCount * 6;
     const values = {
       date,
       fixturesCount,

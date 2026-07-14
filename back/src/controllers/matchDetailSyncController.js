@@ -18,13 +18,18 @@ const syncMatchDetails = async (req, res) => {
             });
         }
 
+        const hasFailedSections = Object.values(result.errors || {}).some(Boolean);
+
         return res.status(200).json({
-            message: "Match details synced successfully",
+            message: hasFailedSections
+                ? "Match details sync completed with some failed sections"
+                : "Match details and prediction odds synced successfully",
             source: "api_football_admin_sync",
             fixture_id: result.fixture_id,
             api_fixture_id: result.api_fixture_id,
             sections: result.sections,
             errors: result.errors,
+            odds: result.odds,
         });
     } catch (err) {
         return res.status(500).json({

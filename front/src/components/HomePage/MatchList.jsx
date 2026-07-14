@@ -49,6 +49,21 @@ const TeamLogo = ({ team }) => {
     );
 };
 
+const TeamDisplay = ({ team, align = 'left' }) => {
+    const isRight = align === 'right';
+
+    return (
+        <div className={`min-w-0 ${isRight ? 'text-right' : ''}`}>
+            <div className={isRight ? 'flex justify-end' : ''}>
+                <TeamLogo team={team} />
+            </div>
+            <p className="mt-1.5 truncate text-sm font-semibold text-white">
+                {team?.name || (isRight ? 'Away Team' : 'Home Team')}
+            </p>
+        </div>
+    );
+};
+
 const getStatusBadge = (fixture) => {
     const status = getFixtureStatus(fixture);
 
@@ -89,6 +104,7 @@ const MatchFeedCard = ({
 }) => {
     const matchId = getMatchId(fixture);
     const status = getFixtureStatus(fixture);
+    const matchPath = matchId ? `/matches/${matchId}` : '#';
 
     return (
         <div className="group min-h-[178px] w-[82vw] max-w-[300px] shrink-0 rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-3 transition-all hover:border-[#8b5cf6]/40 hover:bg-[#202020] sm:w-[320px] sm:max-w-none">
@@ -131,24 +147,16 @@ const MatchFeedCard = ({
                 </div>
             </div>
 
-            <Link to={`/matches/${matchId}`} className="block">
+            <Link to={matchPath} className="block">
                 <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                    <div className="min-w-0">
-                        <TeamLogo team={fixture.homeTeam} />
-                        <p className="mt-1.5 truncate text-sm font-semibold text-white">{fixture.homeTeam?.name || 'Home Team'}</p>
-                    </div>
+                    <TeamDisplay team={fixture.homeTeam} />
 
                     <div className="rounded-lg bg-black/35 px-3 py-1.5 text-center">
                         <p className="text-base font-bold text-white">{getScoreText(fixture)}</p>
                         <p className="text-[10px] uppercase tracking-wide text-gray-500">{fixture.status_short || fixture.match_time_local || 'NS'}</p>
                     </div>
 
-                    <div className="min-w-0 text-right">
-                        <div className="flex justify-end">
-                            <TeamLogo team={fixture.awayTeam} />
-                        </div>
-                        <p className="mt-1.5 truncate text-sm font-semibold text-white">{fixture.awayTeam?.name || 'Away Team'}</p>
-                    </div>
+                    <TeamDisplay team={fixture.awayTeam} align="right" />
                 </div>
 
                 <div className="mt-2 flex items-center justify-between gap-2 border-t border-[#2a2a2a] pt-2 text-[11px] text-gray-400">

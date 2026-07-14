@@ -52,16 +52,34 @@ const hasData = (value) => {
 
 const TeamHeader = ({ team, align = "left" }) => {
   const isRight = align === "right";
-
-  return (
-    <div className={`flex flex-col items-center gap-3 ${isRight ? "xl:items-end" : "xl:items-start"}`}>
+  const teamPath = team?.api_team_id ? `/teams/${team.api_team_id}` : null;
+  const content = (
+    <>
       {team?.logo && (
         <img src={team.logo} alt="" className="h-16 w-16 rounded-full object-contain sm:h-20 sm:w-20" />
       )}
       <div className={isRight ? "xl:text-right" : "xl:text-left"}>
-        <p className="text-lg font-bold text-white sm:text-xl">{getTeamName(team)}</p>
+        <p className="text-lg font-bold text-white transition-colors group-hover:text-[#a78bfa] sm:text-xl">{getTeamName(team)}</p>
         <p className="text-xs text-gray-500">{team?.country || "Club"}</p>
       </div>
+    </>
+  );
+
+  if(teamPath){
+    return (
+      <Link
+        to={teamPath}
+        className={`group flex flex-col items-center gap-3 rounded-lg ${isRight ? "xl:items-end" : "xl:items-start"}`}
+        title={`Open ${getTeamName(team)} profile`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className={`flex flex-col items-center gap-3 ${isRight ? "xl:items-end" : "xl:items-start"}`}>
+      {content}
     </div>
   );
 };
@@ -252,10 +270,6 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
   const [syncingOdds, setSyncingOdds] = useState(false);
 
   const loadOptions = useCallback(async () => {
-    if(!user){
-      return;
-    }
-
     setLoadingOptions(true);
     const result = await getPredictionOptions({ apiFixtureId });
 
@@ -268,7 +282,7 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
     }
 
     setLoadingOptions(false);
-  }, [apiFixtureId, user]);
+  }, [apiFixtureId]);
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
@@ -276,13 +290,18 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
     }, 0);
 
     return () => window.clearTimeout(loadTimer);
-  }, [loadOptions]);
+  }, [loadOptions, user]);
 
   const currentPick = useMemo(() => {
     return (options?.my_picks || [])[0] || null;
   }, [options]);
 
   const handlePick = async (odd) => {
+    if(!user){
+      setMessage("Login first to make a prediction.");
+      return;
+    }
+
     if(options?.is_locked){
       setMessage("Prediction is locked because kickoff time has passed.");
       return;
@@ -305,6 +324,11 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
   };
 
   const handleDeletePick = async (predictionPickId) => {
+    if(!user){
+      setMessage("Login first to manage predictions.");
+      return;
+    }
+
     setDeletingPickId(predictionPickId);
     const result = await deletePredictionPick({ predictionPickId });
 
@@ -337,15 +361,6 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
   const winnerOdds = options?.odds?.winner || [];
   const overUnderGroups = options?.odds?.over_under || [];
   const hasOdds = winnerOdds.length > 0 || overUnderGroups.length > 0;
-
-  if(!user){
-    return (
-      <div className="space-y-4">
-        {hasData(prediction) && <ApiPredictionInsight prediction={prediction} />}
-        <NoDataState title="Login Required" message="Login first to make match predictions and earn leaderboard points." />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -389,6 +404,13 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
           </p>
         )}
 
+        {!user && (
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#8b5cf6]/10 px-3 py-1 text-xs text-[#c4b5fd]">
+            <FaLock />
+            Login to submit a prediction. Guests can view the odds only.
+          </p>
+        )}
+
         {options?.is_locked && (
           <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-yellow-500/10 px-3 py-1 text-xs text-yellow-200">
             <FaLock />
@@ -412,9 +434,9 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
                 <h4 className="mb-3 text-sm font-semibold text-white">Winner</h4>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {winnerOdds.map((odd) => (
-                      <PredictionOddButton
+                    <PredictionOddButton
                         key={odd.fixture_odd_id}
-                        disabled={options?.is_locked}
+                        disabled={!user || options?.is_locked}
                         isSaving={savingOddId === odd.fixture_odd_id}
                         isSelected={currentPick?.fixture_odd_id === odd.fixture_odd_id}
                         odd={odd}
@@ -436,7 +458,7 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
                           {group.options.map((odd) => (
                             <PredictionOddButton
                               key={odd.fixture_odd_id}
-                              disabled={options?.is_locked}
+                              disabled={!user || options?.is_locked}
                               isSaving={savingOddId === odd.fixture_odd_id}
                               isSelected={currentPick?.fixture_odd_id === odd.fixture_odd_id}
                               odd={odd}
@@ -452,7 +474,7 @@ const PredictionTab = ({ apiFixtureId, isAdmin, prediction, user }) => {
           </div>
         )}
 
-        {currentPick && (
+        {user && currentPick && (
           <div className="mt-5 border-t border-[#2a2a2a] pt-4">
             <h4 className="mb-3 text-sm font-semibold text-white">Current Pick</h4>
             <div className="space-y-2">
