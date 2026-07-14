@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaBars,
@@ -33,6 +33,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationLoading, setNotificationLoading] = useState(false);
+  const notificationMenuRef = useRef(null);
 
   const isAuthenticated = Boolean(user);
   const isAdmin = user?.role === 'admin';
@@ -86,6 +87,26 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
       window.removeEventListener('notifications-updated', loadNotifications);
     };
   }, [loadNotifications]);
+
+  useEffect(() => {
+    if(!isNotificationOpen){
+      return undefined;
+    }
+
+    const closeOnOutsideClick = (event) => {
+      if(notificationMenuRef.current && !notificationMenuRef.current.contains(event.target)){
+        setIsNotificationOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    document.addEventListener('touchstart', closeOnOutsideClick);
+
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick);
+      document.removeEventListener('touchstart', closeOnOutsideClick);
+    };
+  }, [isNotificationOpen]);
 
   const handleToggleNotifications = async () => {
     const nextOpen = !isNotificationOpen;
@@ -152,7 +173,7 @@ const NavigationBar = ({ onToggleSidebar, isExpanded }) => {
             </button>
 
             {isAuthenticated && (
-              <div className="relative">
+              <div ref={notificationMenuRef} className="relative">
                 <button
                   type="button"
                   onClick={handleToggleNotifications}
