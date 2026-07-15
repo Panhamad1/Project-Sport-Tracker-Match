@@ -1,52 +1,19 @@
-import { useState } from 'react';
-import { registerUser } from '../services/authService.js';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Layout from '../layouts/Login&SignupLayout';
+import { useSignupPage } from '../hooks/useSignupPage';
 
 const SignupPage = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
-    try{
-      const data = await registerUser(formData.username, formData.email, formData.password);
-      console.log("Register response: ", data);
-
-      if(data.token){
-        alert("Register success");
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/home");
-      }else{
-        alert("Register failed:" + data.message);
-      }
-    }catch(error){
-      console.error(error);
-      alert("Something went wrong");
-    }
-  };
+  const {
+    agreeTerms,
+    formData,
+    handleChange,
+    handleSubmit,
+    setAgreeTerms,
+    showConfirmPassword,
+    showPassword,
+    toggleConfirmPassword,
+    togglePassword,
+  } = useSignupPage();
 
   return (
     <Layout>
@@ -173,7 +140,7 @@ const SignupPage = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={togglePassword}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                       >
                         {showPassword ? (
@@ -206,7 +173,7 @@ const SignupPage = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={toggleConfirmPassword}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                         {showConfirmPassword ? (
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

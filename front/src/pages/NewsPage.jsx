@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
 import { FaExternalLinkAlt, FaNewspaper, FaSearch, FaSyncAlt } from "react-icons/fa";
-import { getNewsArticles } from "../api/football/NewsApi";
 import PanelCard from "../components/common/PanelCard";
 import NoDataState from "../components/matches/NoDataState";
+import { useNewsPage } from "../hooks/useNewsPage";
 
 const formatNewsDate = (value) => {
   if(!value){
@@ -18,41 +17,15 @@ const formatNewsDate = (value) => {
 };
 
 const NewsPage = () => {
-  const [articles, setArticles] = useState([]);
-  const [search, setSearch] = useState("");
-  const [message, setMessage] = useState("Loading news...");
-  const [loading, setLoading] = useState(true);
-
-  const loadNews = useCallback(async (searchValue = "") => {
-    setLoading(true);
-    const result = await getNewsArticles({
-      search: searchValue,
-      limit: 18,
-    });
-
-    if(result.ok){
-      setArticles(result.data?.articles || []);
-      setMessage(result.data?.message || "News loaded successfully");
-    }else{
-      setArticles([]);
-      setMessage(result.data?.message || result.data?.error || "Failed to load news");
-    }
-
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadNews("");
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [loadNews]);
-
-  const handleSearch = (event) => {
-    event.preventDefault();
-    loadNews(search);
-  };
+  const {
+    articles,
+    handleSearch,
+    loadNews,
+    loading,
+    message,
+    search,
+    setSearch,
+  } = useNewsPage();
 
   return (
     <div className="space-y-6 text-white">

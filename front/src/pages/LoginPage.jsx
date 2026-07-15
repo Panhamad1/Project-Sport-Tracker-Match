@@ -1,44 +1,17 @@
-import { useState } from 'react';
-import { loginUser } from '../services/authService.js';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Layout from '../layouts/Login&SignupLayout';
+import { useLoginPage } from '../hooks/useLoginPage';
 
 const LoginPage = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    identifier: "",
-    password: ""
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try{
-      const data = await loginUser(formData.identifier, formData.password);
-      console.log("Login response: ", data);
-
-      if(data.token){
-        alert("Login success");
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/home");
-      }else{
-        alert("login failed:" + data.message);
-      }
-    }catch(error){
-      console.error(error);
-      alert("Something went wrong");
-    }
-
-  };
+  const {
+    formData,
+    handleChange,
+    handleSubmit,
+    rememberMe,
+    setRememberMe,
+    showPassword,
+    togglePassword,
+  } = useLoginPage();
 
   return (
     <Layout>
@@ -130,7 +103,7 @@ const LoginPage = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={togglePassword}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                       >
                         {showPassword ? (

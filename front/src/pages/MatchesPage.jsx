@@ -1,132 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
 import { FaCalendarAlt, FaChevronLeft, FaChevronRight, FaSpinner, FaSyncAlt } from "react-icons/fa";
-import { getFixturesByDate } from "../api/football/FootballApi";
 import MatchCard from "../components/matches/MatchCard";
 import NoDataState from "../components/matches/NoDataState";
-
-const formatDateInput = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-const parseDateInput = (date) => {
-  const [year, month, day] = date.split("-").map(Number);
-
-  return new Date(year, month - 1, day);
-};
-
-const addDays = (date, days) => {
-  const nextDate = parseDateInput(date);
-  nextDate.setDate(nextDate.getDate() + days);
-
-  return formatDateInput(nextDate);
-};
-
-const formatReadableDate = (date) => {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(parseDateInput(date));
-};
-
-const today = formatDateInput(new Date());
-
-const filters = [
-  { key: "all", label: "All Match" },
-  { key: "live", label: "Live Match" },
-  { key: "schedule", label: "Schedule Match" },
-  { key: "finished", label: "Finish Match" },
-];
-
-const liveStatuses = ["1H", "2H", "HT", "ET", "BT", "P", "LIVE"];
-const scheduledStatuses = ["NS", "TBD", "PST"];
-const finishedStatuses = ["FT", "AET", "PEN"];
-
-const getStatusGroup = (statusShort) => {
-  const status = statusShort || "NS";
-
-  if(liveStatuses.includes(status)){
-    return "live";
-  }
-
-  if(finishedStatuses.includes(status)){
-    return "finished";
-  }
-
-  if(scheduledStatuses.includes(status)){
-    return "schedule";
-  }
-
-  return "all";
-};
+import { addDays, filters, formatReadableDate, useMatchesPage } from "../hooks/useMatchesPage";
 
 const MatchesPage = () => {
-  const [selectedDate, setSelectedDate] = useState(today);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [fixtures, setFixtures] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-
-  const loadFixtures = async (date) => {
-    setLoading(true);
-    setMessage("");
-
-    const result = await getFixturesByDate(date);
-
-    if(result.ok){
-      setFixtures(result.data?.fixtures || []);
-      setMessage(result.data?.message || "Fixtures loaded");
-    }else{
-      setFixtures([]);
-      setMessage(result.data?.message || result.data?.error || "Failed to load fixtures");
-    }
-
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadFixtures(selectedDate);
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [selectedDate]);
-
-  const counts = useMemo(() => {
-    return fixtures.reduce((summary, fixture) => {
-      const group = getStatusGroup(fixture.status_short);
-
-      summary.all += 1;
-      if(group !== "all"){
-        summary[group] += 1;
-      }
-
-      return summary;
-    }, {
-      all: 0,
-      live: 0,
-      schedule: 0,
-      finished: 0,
-    });
-  }, [fixtures]);
-
-  const filteredFixtures = useMemo(() => {
-    if(activeFilter === "all"){
-      return fixtures;
-    }
-
-    return fixtures.filter((fixture) => getStatusGroup(fixture.status_short) === activeFilter);
-  }, [activeFilter, fixtures]);
-  const quickDates = [
-    { label: "Yesterday", date: addDays(today, -1) },
-    { label: "Today", date: today },
-    { label: "Tomorrow", date: addDays(today, 1) },
-  ];
+  const {
+    activeFilter,
+    counts,
+    filteredFixtures,
+    loading,
+    loadFixtures,
+    message,
+    quickDates,
+    selectedDate,
+    setActiveFilter,
+    setSelectedDate,
+  } = useMatchesPage();
 
   return (
     <div className="text-white space-y-6">
