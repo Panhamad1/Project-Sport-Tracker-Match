@@ -15,6 +15,11 @@ import PredictionPage from '../pages/PredictionPage';
 import TeamPage from '../pages/TeamPage';
 import PlayerPage from '../pages/PlayerPage';
 import DreamTeamPage from '../pages/DreamTeamPage';
+import HelpPage from '../pages/HelpPage';
+import PrivacyPage from '../pages/PrivacyPage';
+import TermsPage from '../pages/TermsPage';
+import CookiesPage from '../pages/CookiesPage';
+import AboutPage from '../pages/AboutPage';
 import { useAuth } from '../hooks/useAuth';
 
 const GuestOnlyRoute = ({ children }) => {
@@ -61,6 +66,12 @@ function AppRouter() {
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/dream-team" element={<DreamTeamPage />} />
                 <Route path="/admin" element={<AdminPanelPage />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/help/:section" element={<HelpPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/cookies" element={<CookiesPage />} />
+                <Route path="/about" element={<AboutPage />} />
             </Route>
         </Routes>
     </BrowserRouter>
