@@ -47,7 +47,7 @@ const LeaguesPage = () => {
         </div>
 
         <div className="flex flex-wrap items-end gap-3">
-          <label className="min-w-[180px] text-sm text-gray-300">
+          <label className="min-w-45 text-sm text-gray-300">
             Season
             <input
               type="number"

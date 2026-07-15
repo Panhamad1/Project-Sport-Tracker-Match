@@ -1,12 +1,9 @@
 import {
   FaArrowLeft,
-  FaCalendarAlt,
   FaCrown,
   FaFutbol,
-  FaMapMarkerAlt,
   FaSpinner,
   FaStar,
-  FaTrophy,
   FaUsers,
 } from "react-icons/fa";
 import PanelCard from "../components/common/PanelCard";

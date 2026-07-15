@@ -82,7 +82,7 @@ const ProfilePage = () => {
           items={profileItems}
         />
 
-        <PanelCard className="min-h-[420px] p-4 sm:p-6">
+        <PanelCard className="min-h-105 p-4 sm:p-6">
           <div className="mb-5 flex flex-col gap-3 border-b border-[#2a2a2a] pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{activeItemLabel}</p>
