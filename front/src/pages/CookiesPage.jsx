@@ -86,7 +86,6 @@ const CookiesPage = () => {
 
     return (
         <div className="space-y-6 text-white">
-            {/* Back Arrow & Header */}
             <div>
                 <Link
                     to="/help"
@@ -103,7 +102,6 @@ const CookiesPage = () => {
                 <p className="mt-1 text-xs text-gray-500">Last updated: July 2026</p>
             </div>
 
-            {/* Cookie Types Table */}
             <div className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-6">
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <FaList className="text-[#8b5cf6]" />
@@ -143,7 +141,6 @@ const CookiesPage = () => {
                 </div>
             </div>
 
-            {/* Sections */}
             <div className="space-y-4">
                 {sections.map((section, index) => (
                     <div key={index} className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-6">
@@ -163,7 +160,6 @@ const CookiesPage = () => {
                 ))}
             </div>
 
-            {/* Footer Links */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <Link to="/privacy" className="rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] p-3 text-center text-xs text-gray-400 transition-colors hover:border-[#8b5cf6]/30 hover:text-white">
                     Privacy Policy

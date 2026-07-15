@@ -27,7 +27,6 @@ const AboutPage = () => {
 
     return (
         <div className="space-y-6 text-white">
-            {/* Back Arrow & Header */}
             <div>
                 <Link
                     to="/help"
@@ -43,7 +42,6 @@ const AboutPage = () => {
                 </p>
             </div>
 
-            {/* Highlight Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {highlights.map((item, index) => (
                     <div key={index} className="text-center p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg hover:border-[#8b5cf6]/30 transition-all group">
@@ -56,7 +54,6 @@ const AboutPage = () => {
                 ))}
             </div>
 
-            {/* Who We Are */}
             <div className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-6">
                 <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <FaFutbol className="text-[#8b5cf6]" />
@@ -75,7 +72,6 @@ const AboutPage = () => {
                 </div>
             </div>
 
-            {/* Key Features */}
             <div className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-6">
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <FaCheckCircle className="text-green-400" />
@@ -94,7 +90,6 @@ const AboutPage = () => {
                 </div>
             </div>
 
-            {/* Our Mission */}
             <div className="rounded-lg border border-[#8b5cf6]/30 bg-linear-to-br from-[#8b5cf6]/10 to-[#1a1a1a] p-6">
                 <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <FaTrophy className="text-yellow-400" />
@@ -105,7 +100,6 @@ const AboutPage = () => {
                 </p>
             </div>
 
-            {/* What Makes Us Different */}
             <div className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-6">
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <FaStar className="text-yellow-400" />
@@ -124,7 +118,6 @@ const AboutPage = () => {
                 </div>
             </div>
 
-            {/* Contact Section */}
             <div className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] p-6">
                 <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                     <FaEnvelope className="text-[#8b5cf6]" />
@@ -145,7 +138,6 @@ const AboutPage = () => {
                 </div>
             </div>
 
-            {/* Footer Links */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <Link to="/privacy" className="rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] p-3 text-center text-xs text-gray-400 transition-colors hover:border-[#8b5cf6]/30 hover:text-white">
                     Privacy Policy

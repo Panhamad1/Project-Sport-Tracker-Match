@@ -56,7 +56,6 @@ const HelpPage = () => {
 
     return (
         <div className="space-y-6 text-white">
-            {/* Header */}
             <div>
                 <p className="text-sm font-medium text-[#8b5cf6]">Help & Support</p>
                 <h1 className="mt-1 text-2xl font-bold">How can we help you?</h1>
@@ -65,7 +64,6 @@ const HelpPage = () => {
                 </p>
             </div>
 
-            {/* Search */}
             <div className="relative max-w-2xl">
                 <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input
@@ -77,7 +75,6 @@ const HelpPage = () => {
                 />
             </div>
 
-            {/* Quick Support Options */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {supportOptions.map((option, index) => (
                     <a
@@ -100,7 +97,6 @@ const HelpPage = () => {
                 ))}
             </div>
 
-            {/* FAQs */}
             <div className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] overflow-hidden">
                 <div className="border-b border-[#2a2a2a] px-6 py-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -139,7 +135,6 @@ const HelpPage = () => {
                 )}
             </div>
 
-            {/* Contact Support */}
             <div className="rounded-lg border border-[#8b5cf6]/30 bg-linear-to-br from-[#8b5cf6]/10 to-[#1a1a1a] p-6">
                 <div className="flex flex-col items-center text-center sm:flex-row sm:text-left sm:justify-between">
                     <div>
@@ -177,7 +172,6 @@ const HelpPage = () => {
                 </div>
             </div>
 
-            {/* Quick Links */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Link to="/privacy" className="rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] p-3 text-center text-xs text-gray-400 transition-colors hover:border-[#8b5cf6]/30 hover:text-white">
                     Privacy Policy
