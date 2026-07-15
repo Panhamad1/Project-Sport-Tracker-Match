@@ -59,4 +59,28 @@ const syncTeamsByLeagueSeason = async (league, season) => {
     };
 };
 
-export { syncTeamsByLeagueSeason };
+const syncTeamByApiId = async (teamApiId) => {
+    const apiData = await apiFootballGet("/teams", {
+        id: teamApiId,
+    });
+
+    const apiTeamData = apiData.response?.[0];
+
+    if (!apiTeamData) {
+        return {
+            teamApiId,
+            count: 0,
+            team: null,
+        };
+    }
+
+    const team = await saveOrUpdateTeam(apiTeamData);
+
+    return {
+        teamApiId,
+        count: team ? 1 : 0,
+        team,
+    };
+};
+
+export { syncTeamByApiId, syncTeamsByLeagueSeason };

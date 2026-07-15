@@ -9,6 +9,37 @@ import { useAuth } from '../../hooks/useAuth';
 const tabs = ['Live', 'Upcoming', 'Finished'];
 const liveStatuses = ['1H', '2H', 'HT', 'ET', 'BT', 'P', 'LIVE'];
 const finishedStatuses = ['FT', 'AET', 'PEN'];
+const appTimezone = 'Asia/Phnom_Penh';
+
+const formatDateInput = (date) => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: appTimezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(date);
+    const dateParts = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+    return `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
+};
+
+const getTodayDate = () => formatDateInput(new Date());
+
+const getFixtureLocalDate = (fixture) => {
+    if(fixture.match_date_local){
+        return fixture.match_date_local;
+    }
+
+    if(fixture.match_datetime_local){
+        return String(fixture.match_datetime_local).slice(0, 10);
+    }
+
+    if(fixture.match_date){
+        return String(fixture.match_date).slice(0, 10);
+    }
+
+    return '';
+};
 
 const getMatchId = (fixture) => {
     const matchId = fixture?.public_match_id || fixture?.api_fixture_id;
@@ -342,8 +373,22 @@ const MatchList = () => {
     };
 
     const filteredFixtures = useMemo(() => {
+        const todayDate = getTodayDate();
+
         return fixtures
-            .filter((fixture) => getFixtureStatus(fixture) === activeTab.toLowerCase())
+            .filter((fixture) => {
+                const status = getFixtureStatus(fixture);
+
+                if(status !== activeTab.toLowerCase()){
+                    return false;
+                }
+
+                if(activeTab !== 'Finished'){
+                    return true;
+                }
+
+                return getFixtureLocalDate(fixture) === todayDate;
+            })
             .sort((a, b) => {
                 const leftDate = new Date(a.match_datetime_local || a.match_date || 0);
                 const rightDate = new Date(b.match_datetime_local || b.match_date || 0);
@@ -354,8 +399,22 @@ const MatchList = () => {
     }, [activeTab, fixtures]);
 
     const counts = useMemo(() => {
+        const todayDate = getTodayDate();
+
         return tabs.reduce((accumulator, tab) => {
-            accumulator[tab] = fixtures.filter((fixture) => getFixtureStatus(fixture) === tab.toLowerCase()).length;
+            accumulator[tab] = fixtures.filter((fixture) => {
+                const status = getFixtureStatus(fixture);
+
+                if(status !== tab.toLowerCase()){
+                    return false;
+                }
+
+                if(tab !== 'Finished'){
+                    return true;
+                }
+
+                return getFixtureLocalDate(fixture) === todayDate;
+            }).length;
             return accumulator;
         }, {});
     }, [fixtures]);

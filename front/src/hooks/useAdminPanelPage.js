@@ -9,6 +9,7 @@ import {
   runPlayersSync,
   runSingleFixtureSync,
   runStandingsSync,
+  runTeamSync,
   runTeamsSync,
 } from "../services/adminPanelService";
 
@@ -32,6 +33,9 @@ const initialForms = {
   },
   teams: {
     league: "39",
+  },
+  team: {
+    teamApiId: "541",
   },
   players: {
     teamApiId: "541",
@@ -283,6 +287,16 @@ export const useAdminPanelPage = () => {
       ],
       submitLabel: "Sync Teams",
       run: runTeamsSync,
+    },
+    {
+      key: "team",
+      title: "Sync Specific Team",
+      description: "Fetch one team by API team id when you only need a single club.",
+      fields: [
+        { name: "teamApiId", label: "Team API ID", type: "number" },
+      ],
+      submitLabel: "Sync Team",
+      run: runTeamSync,
     },
     {
       key: "players",

@@ -716,6 +716,22 @@ const openApiSpec = {
                 },
             },
         },
+        "/api/admin/sync/teams/{teamApiId}": {
+            post: {
+                tags: ["Admin Sync"],
+                summary: "Sync one team by API team id",
+                security: bearerSecurity,
+                parameters: [
+                    pathParam("teamApiId", "API team id"),
+                ],
+                responses: {
+                    200: ok("Team synced"),
+                    400: badRequest,
+                    404: notFound,
+                    ...adminResponses,
+                },
+            },
+        },
         "/api/admin/sync/players": {
             post: {
                 tags: ["Admin Sync"],

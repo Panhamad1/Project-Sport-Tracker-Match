@@ -58,6 +58,10 @@ export const syncTeams = ({ league, season }) => {
     }));
 };
 
+export const syncTeam = ({ teamApiId }) => {
+    return requestSync(() => API.post(`/teams/${teamApiId}`, {}));
+};
+
 export const syncPlayers = ({ teamApiId, season, allSeasons }) => {
     return requestSync(() => API.post("/players", {}, {
         params: cleanParams({ teamApiId, season, allSeasons }),

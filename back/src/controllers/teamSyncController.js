@@ -1,4 +1,4 @@
-import { syncTeamsByLeagueSeason } from "../services/teamSyncService.js";
+import { syncTeamByApiId, syncTeamsByLeagueSeason } from "../services/teamSyncService.js";
 import {
     getRequestedSeasons,
     parsePositiveInteger,
@@ -92,4 +92,63 @@ const syncTeams = async (req, res) => {
     }
 };
 
-export { syncTeams };
+const syncTeam = async (req, res) => {
+    try {
+        const teamApiId = parsePositiveInteger(req.params.teamApiId);
+
+        if (!teamApiId) {
+            return res.status(400).json({
+                message: "Invalid teamApiId. Use a positive API team id",
+                example: "/api/admin/sync/teams/541",
+            });
+        }
+
+        const result = await syncTeamByApiId(teamApiId);
+
+        if (result.count === 0) {
+            return res.status(404).json({
+                message: "No team found for this API team id",
+                source: "api_football_admin_sync",
+                teamApiId,
+                count: 0,
+                results: [
+                    {
+                        teamApiId,
+                        count: 0,
+                        status: "failed",
+                        message: "No team found for this API team id",
+                    },
+                ],
+            });
+        }
+
+        return res.status(200).json({
+            message: "Team synced successfully",
+            source: "api_football_admin_sync",
+            teamApiId,
+            count: result.count,
+            team: {
+                id: result.team.id,
+                api_team_id: result.team.api_team_id,
+                name: result.team.name,
+                country: result.team.country,
+                logo: result.team.logo,
+            },
+            results: [
+                {
+                    teamApiId,
+                    count: result.count,
+                    status: "success",
+                    message: "Team synced successfully",
+                },
+            ],
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Failed to sync team",
+            error: err.message,
+        });
+    }
+};
+
+export { syncTeam, syncTeams };
