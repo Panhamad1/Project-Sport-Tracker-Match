@@ -744,7 +744,7 @@ const LineupsTab = ({ lineups, overview }) => {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="relative h-[520px] min-w-[720px] bg-emerald-600">
+        <div className="relative h-130 min-w-180 bg-emerald-600">
           <FieldLines />
 
           {(homeLineup?.startXI || []).slice(0, 11).map((item, index) => (

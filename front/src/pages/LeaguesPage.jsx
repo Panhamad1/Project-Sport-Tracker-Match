@@ -169,7 +169,7 @@ const StandingsTable = ({ group }) => {
         <h3 className="font-semibold text-white">{group.name}</h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[860px] text-left text-sm">
+        <table className="w-full min-w-215 text-left text-sm">
           <thead className="bg-[#0a0a0a] text-xs uppercase tracking-wide text-gray-500">
             <tr>
               <th className="px-4 py-3 font-medium">#</th>
@@ -337,7 +337,7 @@ const LeaguesPage = () => {
         </div>
 
         <div className="flex flex-wrap items-end gap-3">
-          <label className="min-w-[180px] text-sm text-gray-300">
+          <label className="min-w-45 text-sm text-gray-300">
             Season
             <input
               type="number"

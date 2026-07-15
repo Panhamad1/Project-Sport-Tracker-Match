@@ -577,8 +577,8 @@ const DreamTeamPage = () => {
           </div>
 
           <div className="p-5">
-            <div className="relative min-h-[620px] overflow-hidden rounded-lg border border-emerald-500/20 bg-emerald-900">
-              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,.06)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+            <div className="relative min-h-155 overflow-hidden rounded-lg border border-emerald-500/20 bg-emerald-900">
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(0deg,rgba(255,255,255,.06)_1px,transparent_1px)] bg-size-[64px_64px]"></div>
               <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/20"></div>
               <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20"></div>
               <div className="absolute bottom-0 left-1/2 h-24 w-52 -translate-x-1/2 rounded-t-lg border border-b-0 border-white/20"></div>
