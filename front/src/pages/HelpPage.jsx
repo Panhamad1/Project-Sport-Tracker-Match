@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaSearch, FaEnvelope, FaPhone, FaBook, FaVideo, FaQuestionCircle, FaArrowRight, FaChevronDown, FaChevronUp, FaCheckCircle } from 'react-icons/fa';
+import { FaSearch, FaEnvelope, FaPhone, FaQuestionCircle, FaArrowRight, FaChevronDown, FaChevronUp, FaCheckCircle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 const HelpPage = () => {
@@ -50,8 +50,6 @@ const HelpPage = () => {
 
     const supportOptions = [
         { icon: <FaEnvelope />, title: 'Email Support', description: 'Get help via email', action: 'support@foothub.com', link: 'mailto:support@foothub.com' },
-        { icon: <FaBook />, title: 'Documentation', description: 'Read our guides', action: 'View Docs', link: '#' },
-        { icon: <FaVideo />, title: 'Video Tutorials', description: 'Watch step-by-step guides', action: 'Watch Now', link: '#' },
     ];
 
     return (
@@ -75,7 +73,7 @@ const HelpPage = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid max-w-md grid-cols-1 gap-4">
                 {supportOptions.map((option, index) => (
                     <a
                         key={index}
@@ -159,12 +157,12 @@ const HelpPage = () => {
                         <FaCheckCircle className="text-green-400" />
                         Response within 24 hours
                     </span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-gray-600">-</span>
                     <span className="flex items-center gap-1">
                         <FaPhone className="text-[#8b5cf6]" />
                         +855 0987654321
                     </span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-gray-600">-</span>
                     <span className="flex items-center gap-1">
                         <FaEnvelope className="text-[#8b5cf6]" />
                         support@foothub.com

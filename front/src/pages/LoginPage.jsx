@@ -34,21 +34,21 @@ const LoginPage = () => {
               </h1>
 
               <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-md leading-relaxed">
-                Stay updated with live scores, match predictions, and exclusive 
+                Stay updated with saved match scores, match predictions, and useful 
                 football statistics from leagues worldwide.
               </p>
 
               <div className="space-y-2 sm:space-y-3 pt-2 sm:pt-4">
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                  <span className="text-[#8b5cf6] shrink-0">✓</span>
-                  <span>Live match updates & scores</span>
+                  <span className="text-[#8b5cf6] shrink-0">+</span>
+                  <span>Saved match scores and status</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                  <span className="text-[#8b5cf6] shrink-0">✓</span>
+                  <span className="text-[#8b5cf6] shrink-0">+</span>
                   <span>Team & player statistics</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                  <span className="text-[#8b5cf6] shrink-0">✓</span>
+                  <span className="text-[#8b5cf6] shrink-0">+</span>
                   <span>Odds-based match predictions</span>
                 </div>
               </div>

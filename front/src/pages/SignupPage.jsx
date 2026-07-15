@@ -37,25 +37,25 @@ const SignupPage = () => {
               </h1>
 
               <p className="text-sm sm:text-base md:text-lg text-gray-400 max-w-md leading-relaxed">
-                Create your account and get access to live scores, team stats, 
+                Create your account and get access to saved match scores, team stats, 
                 predictions, and everything about football.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-2 sm:pt-4">
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                  <span className="text-[#8b5cf6] shrink-0">✦</span>
-                  <span>Real-time match coverage</span>
+                  <span className="text-[#8b5cf6] shrink-0">+</span>
+                  <span>Match score and status coverage</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                  <span className="text-[#8b5cf6] shrink-0">✦</span>
+                  <span className="text-[#8b5cf6] shrink-0">+</span>
                   <span>Detailed player & team analytics</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                  <span className="text-[#8b5cf6] shrink-0">✦</span>
+                  <span className="text-[#8b5cf6] shrink-0">+</span>
                   <span>Personalized football feed</span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 text-gray-300 text-sm sm:text-base">
-                  <span className="text-[#8b5cf6] shrink-0">✦</span>
+                  <span className="text-[#8b5cf6] shrink-0">+</span>
                   <span>Exclusive match predictions</span>
                 </div>
               </div>

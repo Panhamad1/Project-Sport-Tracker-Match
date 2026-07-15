@@ -3,14 +3,14 @@ import { FaArrowLeft, FaFutbol, FaUsers, FaTrophy, FaRocket, FaCheckCircle, FaEn
 
 const AboutPage = () => {
     const highlights = [
-        { icon: <FaFutbol className="text-3xl text-[#8b5cf6]" />, label: 'Live Scores', description: 'Real-time match updates' },
+        { icon: <FaFutbol className="text-3xl text-[#8b5cf6]" />, label: 'Match Scores', description: 'Saved score and status updates' },
         { icon: <FaTrophy className="text-3xl text-yellow-400" />, label: 'Predictions', description: 'Compete with friends' },
         { icon: <FaUsers className="text-3xl text-green-400" />, label: 'Community', description: 'Leaderboard rankings' },
         { icon: <FaRocket className="text-3xl text-[#8b5cf6]" />, label: 'Fast & Reliable', description: 'Lightning-fast data' },
     ];
 
     const features = [
-        { icon: <FaFutbol className="text-[#8b5cf6]" />, title: 'Match Fixtures', text: 'Browse football fixtures by date with Cambodia timezone support. See match status including NS, 1H, HT, FT, AET, and PEN in real time.' },
+        { icon: <FaFutbol className="text-[#8b5cf6]" />, title: 'Match Fixtures', text: 'Browse football fixtures by date with Cambodia timezone support. See match status including NS, 1H, HT, FT, AET, and PEN from saved match data.' },
         { icon: <FaListAlt className="text-blue-400" />, title: 'Match Details', text: 'Dive deep into every match with overview, head-to-head records, prediction data, lineups, statistics, goal scorers, and live stream links.' },
         { icon: <FaChartLine className="text-green-400" />, title: 'League Standings', text: 'View complete league tables with team rankings, points, wins, draws, losses, and goal differences for all major leagues.' },
         { icon: <FaStar className="text-yellow-400" />, title: 'Predictions & Points', text: 'Make predictions on match outcomes and over/under goals before kickoff. Earn points based on odds accuracy and climb the leaderboard.' },
@@ -38,7 +38,7 @@ const AboutPage = () => {
                 <p className="text-sm font-medium text-[#8b5cf6]">About Us</p>
                 <h1 className="mt-1 text-2xl font-bold">About FootHub</h1>
                 <p className="mt-2 max-w-3xl text-sm text-gray-400">
-                    Your ultimate football tracking platform — built by fans, for fans.
+                    Your football tracking platform, built by fans for fans.
                 </p>
             </div>
 
@@ -61,7 +61,7 @@ const AboutPage = () => {
                 </h2>
                 <div className="space-y-3 text-sm text-gray-400 leading-relaxed">
                     <p>
-                        FootHub is a comprehensive football tracking platform designed for fans in Cambodia and beyond who want to stay connected with the world of football. We provide live scores, detailed match information, league standings, and interactive prediction features — all in one place.
+                        FootHub is a comprehensive football tracking platform designed for fans in Cambodia and beyond who want to stay connected with the world of football. We provide saved match scores, detailed match information, league standings, and interactive prediction features in one place.
                     </p>
                     <p>
                         Our platform operates on a database-first architecture, meaning all football data is professionally synced and stored in our system. This ensures fast, reliable access to match data without depending on slow external API calls for every page load.
@@ -96,7 +96,7 @@ const AboutPage = () => {
                     Our Mission
                 </h2>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                    To provide football enthusiasts with the most comprehensive, reliable, and user-friendly platform for tracking matches, making predictions, and engaging with the global football community. We believe every fan deserves access to accurate match data, real-time updates, and fun interactive features — all without the complexity of traditional sports platforms.
+                    To provide football enthusiasts with a reliable and user-friendly platform for tracking matches, making predictions, and engaging with football data. We believe every fan deserves access to accurate saved match data, score updates, and fun interactive features without the complexity of traditional sports platforms.
                 </p>
             </div>
 

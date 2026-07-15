@@ -12,12 +12,16 @@ API-FOOTBALL is used only by admin sync features because the free API plan has r
 - View scores and match status such as NS, 1H, HT, FT, AET, and PEN
 - View match details with overview, H2H, prediction data, lineups, statistics, goal scorers, and stream links
 - View league standings
+- View team detail pages with squad, season records, recent matches, and upcoming matches
+- View player detail pages with season-based statistics
 - Search teams, leagues, players, and matches
 - Save favorite teams
 - Pin important matches
 - Submit prediction picks before kickoff
 - View a public leaderboard
 - Build a dream team
+- Read football news
+- Receive match and prediction notifications
 - Let admin choose a global top match
 - Let admin sync and maintain football data
 
@@ -44,6 +48,7 @@ External data source:
 - API-FOOTBALL from API-SPORTS
 - Base URL: `https://v3.football.api-sports.io`
 - Timezone: `Asia/Phnom_Penh`
+- GNews API for football news sync
 
 ## Core System Rule
 
@@ -120,19 +125,27 @@ Public fixture view:
 3. Backend reads fixtures from MySQL by Cambodia date range.
 4. Backend returns saved fixtures only.
 
+Home fixture feed:
+1. Frontend calls `GET /api/football/fixtures/feed`.
+2. Backend reads saved fixtures from MySQL.
+3. Frontend groups them into live, upcoming, and finished.
+4. Finished matches on the home feed are limited to today's finished matches so old results do not keep growing forever.
+
 ## Match Detail Flow
 
 Admin detail sync:
 1. Admin loads saved fixtures by date.
 2. Admin syncs one match detail or all match details for that date.
-3. Backend fetches statistics, lineups, prediction data, H2H, and events where available.
-4. Backend saves match detail data in MySQL.
+3. Backend fetches statistics, lineups, prediction data, H2H, events, and odds where available.
+4. Backend saves match detail data in MySQL and saves supported odds in `fixture_odds`.
+5. If one section fails because of API limits or missing API data, backend keeps old saved section data where possible and returns section-level errors to the admin panel.
 
 Public match detail:
 1. User opens a match detail page.
-2. Frontend calls `GET /api/football/matches/:apiFixtureId`.
+2. Frontend calls `GET /api/football/matches/:matchId`.
 3. Backend returns overview, H2H, prediction data, lineups, statistics, goal scorers, and stream links.
 4. If a section has no data, frontend can show "No Data Yet".
+5. Team names/logos in match detail can link to team detail pages.
 
 ## League And Standing Flow
 
@@ -148,10 +161,15 @@ Public view:
 
 ## Team And Player Flow
 
-Team sync:
-1. Admin chooses league id and season.
+Team sync by league:
+1. Admin chooses league id.
 2. Backend fetches teams from API-FOOTBALL.
-3. Backend saves or updates teams.
+3. Backend saves or updates teams across supported seasons where needed.
+
+Specific team sync:
+1. Admin chooses one team API id.
+2. Backend fetches that single team from API-FOOTBALL.
+3. Backend saves or updates the team profile and venue data.
 
 Player sync by team:
 1. Admin chooses team id and season.
@@ -163,6 +181,17 @@ Specific player sync:
 1. Admin chooses player id and season.
 2. Backend fetches that player.
 3. Backend saves player profile, team, league, and statistics data.
+
+Public team view:
+1. User opens a team page.
+2. Frontend calls `GET /api/football/teams/:teamId?season=YYYY`.
+3. Backend returns team profile, standings rows, squad for selected season, player season options, recent matches, and upcoming matches.
+4. Players in the squad can link to player detail pages.
+
+Public player view:
+1. User opens a player page.
+2. Frontend calls `GET /api/football/players/:playerId?season=YYYY`.
+3. Backend returns player profile, season statistics, available statistic seasons, and selected season.
 
 ## Search Flow
 
@@ -203,6 +232,18 @@ Dream team:
 3. Backend stores the dream team as formation plus player slot data.
 4. User can update or delete the dream team.
 
+Notifications:
+1. Logged-in user can load notifications.
+2. Backend creates notifications for pinned match start alerts and prediction result alerts.
+3. User can mark one notification as read.
+4. User can mark all notifications as read.
+
+News:
+1. Admin syncs football news from GNews API.
+2. Backend saves articles in MySQL.
+3. Public users read saved news articles from the database.
+4. The public news page does not call GNews directly.
+
 ## Admin Match Features
 
 Top match:
@@ -226,17 +267,18 @@ Prediction markets:
 - Over/Under: only 0.5, 1.5, 2.5, 3.5, 4.5, and 5.5 lines
 
 Admin odds sync:
-1. Admin opens a match detail page.
-2. Admin goes to the Prediction tab.
-3. Admin clicks Sync Odds.
-4. Backend fetches odds from API-FOOTBALL.
-5. Backend saves supported odds in `fixture_odds`.
+1. Admin can sync odds from the Prediction tab.
+2. Match detail sync also attempts to sync supported odds automatically.
+3. Backend fetches odds from API-FOOTBALL.
+4. Backend saves supported odds in `fixture_odds`.
 
 User pick flow:
 1. Logged-in user opens a match before kickoff.
 2. User selects a winner or over/under option.
 3. Backend saves the selected odd snapshot.
-4. Prediction locks when the match starts.
+4. User can only keep one active pick per match. Choosing a different option replaces the old pick.
+5. Prediction locks when the match starts.
+6. Guests can view odds/options, but they cannot save picks.
 
 Point flow:
 1. Admin refreshes final score/status.
@@ -269,17 +311,35 @@ Auth:
 - `GET /api/auth/me`
 
 Fixtures:
+- `GET /api/football/fixtures/feed`
 - `GET /api/football/fixtures/date/:date`
 
 Matches:
-- `GET /api/football/matches/:apiFixtureId`
-- `GET /api/football/matches/:apiFixtureId/streams`
+- `GET /api/football/matches/:matchId`
+- `GET /api/football/matches/:matchId/streams`
 
 Leagues:
 - `GET /api/football/leagues/:leagueId/standings?season=YYYY`
 
+Teams:
+- `GET /api/football/teams/:teamId?season=YYYY`
+
+Players:
+- `GET /api/football/players/:playerId?season=YYYY`
+
 Search:
 - `GET /api/football/search?search=word&type=all`
+
+Featured fixture:
+- `GET /api/football/featured-fixtures`
+
+News:
+- `GET /api/news`
+
+Notifications:
+- `GET /api/notifications`
+- `PATCH /api/notifications/read-all`
+- `PATCH /api/notifications/:notificationId/read`
 
 Favorites:
 - `POST /api/favorites/teams/:teamId`
@@ -293,7 +353,10 @@ Pinned matches:
 
 Predictions:
 - `GET /api/predictions/matches/:apiFixtureId/options`
+- `GET /api/predictions/matches/:apiFixtureId/me`
+- `POST /api/predictions/matches/:apiFixtureId`
 - `POST /api/predictions/matches/:apiFixtureId/picks`
+- `DELETE /api/predictions/matches/:apiFixtureId`
 - `DELETE /api/predictions/picks/:predictionPickId`
 - `GET /api/predictions/me`
 
@@ -312,9 +375,11 @@ Admin sync:
 - `GET /api/admin/sync/fixtures/date/:date`
 - `POST /api/admin/sync/fixtures/:fixtureId`
 - `POST /api/admin/sync/teams?league=&season=`
+- `POST /api/admin/sync/teams/:teamApiId`
 - `POST /api/admin/sync/players?teamApiId=&season=`
 - `POST /api/admin/sync/players/:playerApiId?season=`
 - `POST /api/admin/sync/standings?league=&season=`
+- `POST /api/admin/sync/news`
 - `POST /api/admin/sync/matches/:matchId/details`
 - `POST /api/admin/sync/matches/details/date/:date`
 
@@ -325,6 +390,7 @@ Admin prediction:
 Admin stream links:
 - `GET /api/admin/stream-links/matches/:apiFixtureId`
 - `POST /api/admin/stream-links/matches/:apiFixtureId`
+- `PATCH /api/admin/stream-links/:streamLinkId`
 - `DELETE /api/admin/stream-links/:streamLinkId`
 
 Admin top match:
@@ -349,8 +415,11 @@ Admin top match:
 - featured_fixtures
 - stream_links
 - fixture_odds
+- predictions
 - prediction_picks
 - dream_teams
+- notifications
+- news_articles
 
 ## Database Notes
 
@@ -389,18 +458,25 @@ Admin sync:
 - Sync fixtures by date
 - Sync standings by league and season
 - Sync teams by league and season
+- Sync one specific team
 - Sync players by team and season
 - Sync specific player
 - Sync match detail
+- Sync match details by date
 - Sync odds
+- Sync football news
 
 Public data:
+- Load home fixture feed
 - Load fixtures by date
 - Load match detail
 - Search saved data
 - Load standings
+- Load team detail
+- Load player detail
 - Load stream links
 - Load top match
+- Load news
 
 Logged-in user:
 - Favorite team
@@ -408,6 +484,8 @@ Logged-in user:
 - Save prediction pick
 - Remove prediction pick before kickoff
 - Save dream team
+- Load notifications
+- Mark notification as read
 
 Admin finalization:
 - Refresh finished match score
