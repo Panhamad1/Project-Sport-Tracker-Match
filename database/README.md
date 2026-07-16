@@ -53,6 +53,28 @@ database/backups/
 
 Generated SQL backup files are ignored by Git.
 
+## Automatic Backup With GitHub Actions
+
+The project also includes an automatic backup workflow:
+
+```text
+.github/workflows/database-backup.yml
+```
+
+The workflow runs every day at 02:00 Cambodia time and can also be started manually from the GitHub Actions tab.
+
+Before using it, add these repository secrets in GitHub:
+
+```text
+DB_HOST
+DB_PORT
+DB_USER
+DB_PASS
+DB_NAME
+```
+
+The workflow creates a `.sql` backup with `mysqldump` and uploads it as a GitHub Actions artifact. The backup artifact is kept for 14 days. Database backup files are not committed to the repository because they can contain private user data.
+
 ## Recovery
 
 The recovery script also reads database settings from `database/.env`.

@@ -1,0 +1,46 @@
+name: Database Backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every day at 02:00 Cambodia time (19:00 UTC).
+    - cron: "0 19 * * *"
+
+jobs:
+  backup:
+    name: Export MySQL backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client || sudo apt-get install -y default-mysql-client
+
+      - name: Run database backup
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          BACKUP_DIR: database/backups
+          MYSQLDUMP_PATH: mysqldump
+        run: python database/scripts/backup_script.py
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: foothub-database-backup-${{ github.run_id }}
+          path: database/backups/*.sql
+          if-no-files-found: error
+          retention-days: 14

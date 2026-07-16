@@ -12,10 +12,14 @@ load_database_env()
 DATABASE_DIR = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = DATABASE_DIR.parent
 
-DB_HOST = os.getenv("DB_HOST", "your-aiven-host")
-DB_PORT = os.getenv("DB_PORT", "11930")
-DB_USER = os.getenv("DB_USER", "avnadmin")
-DB_PASSWORD = os.getenv("DB_PASS") or os.getenv("DB_PASSWORD", "your-password")
+def env_value(name, default):
+    return os.getenv(name) or default
+
+
+DB_HOST = env_value("DB_HOST", "your-aiven-host")
+DB_PORT = env_value("DB_PORT", "11930")
+DB_USER = env_value("DB_USER", "avnadmin")
+DB_PASSWORD = os.getenv("DB_PASS") or env_value("DB_PASSWORD", "your-password")
 
 MYSQL_PATH = os.getenv(
     "MYSQL_PATH",
@@ -73,12 +77,13 @@ def restore_database(input_file):
         f"--host={DB_HOST}",
         f"--port={DB_PORT}",
         f"--user={DB_USER}",
-        f"--password={DB_PASSWORD}",
         "--ssl-mode=REQUIRED",
     ]
 
     with input_file.open("rb") as infile:
-        result = subprocess.run(command, stdin=infile, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        env = os.environ.copy()
+        env["MYSQL_PWD"] = DB_PASSWORD
+        result = subprocess.run(command, stdin=infile, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
 
     if result.returncode == 0:
         print(f"Restore successful from {input_file}")
@@ -86,6 +91,7 @@ def restore_database(input_file):
 
     print("Restore failed")
     print(result.stderr.decode("utf-8", errors="replace"))
+    sys.exit(result.returncode)
 
 
 if __name__ == "__main__":

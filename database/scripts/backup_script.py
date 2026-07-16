@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -12,11 +13,15 @@ load_database_env()
 DATABASE_DIR = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = DATABASE_DIR.parent
 
-DB_HOST = os.getenv("DB_HOST", "your-aiven-host")
-DB_PORT = os.getenv("DB_PORT", "11930")
-DB_USER = os.getenv("DB_USER", "avnadmin")
-DB_PASSWORD = os.getenv("DB_PASS") or os.getenv("DB_PASSWORD", "your-password")
-DB_NAME = os.getenv("DB_NAME", "foothub")
+def env_value(name, default):
+    return os.getenv(name) or default
+
+
+DB_HOST = env_value("DB_HOST", "your-aiven-host")
+DB_PORT = env_value("DB_PORT", "11930")
+DB_USER = env_value("DB_USER", "avnadmin")
+DB_PASSWORD = os.getenv("DB_PASS") or env_value("DB_PASSWORD", "your-password")
+DB_NAME = env_value("DB_NAME", "foothub")
 
 BACKUP_DIR = Path(os.getenv("BACKUP_DIR", DATABASE_DIR / "backups"))
 if not BACKUP_DIR.is_absolute():
@@ -69,7 +74,6 @@ def backup_database():
         f"--host={DB_HOST}",
         f"--port={DB_PORT}",
         f"--user={DB_USER}",
-        f"--password={DB_PASSWORD}",
         "--ssl-mode=REQUIRED",
         "--single-transaction",
         "--routines",
@@ -80,7 +84,9 @@ def backup_database():
         f"--result-file={output_file}",
     ]
 
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    env = os.environ.copy()
+    env["MYSQL_PWD"] = DB_PASSWORD
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
 
     if result.returncode == 0:
         print("Backup successful")
@@ -90,6 +96,7 @@ def backup_database():
 
     print("Backup failed")
     print(result.stderr)
+    sys.exit(result.returncode)
 
 
 if __name__ == "__main__":
